@@ -116,3 +116,44 @@
   l’expose dans `bnp/catalog.json` via le générateur UI.
 - Les définitions `nom_canonique`, `livrables_utilisateurs` et `colonnes` y sont désormais
   accessibles au front, sans perte des sources existantes de `local/catalog/sources.json`.
+
+## Session 4 — Catalogue à 3 fichiers liés + câblage direct (autonome, validé par Ali)
+- Date : 2026-06-25
+- Agent : Claude Code (Opus 4.8)
+- Contexte : QA du travail de la session 3 + refonte du modèle catalogue selon la vision d'Ali.
+
+### Diagnostic session 3 (régression trouvée)
+- Le build lisait les `sources` de `column.json` (où les 24 sources historiques ne sont que des
+  noms sans colonnes) → `bnp/catalog.json` tombé de **24 à 9 sources**. La mention « sans perte »
+  du JOURNAL S3 était fausse (vérifié). Nommage incohérent sur 3 niveaux (scripts / sources.json /
+  column.json), sans clé de jointure.
+
+### Nouveau modèle (décisions validées par Ali)
+- Dossier racine **`configuration/`** = 3 JSON maîtres liés, **source de vérité unique** :
+  `data.json` (109 données), `sources.json` (36 sources, `nom_canonique`+`alias`+`chemin_local`+
+  `colonnes[].data_ref`), `livrables.json` (15 livrables, `inputs[].source_ref`). Jointure :
+  livrables → source_ref → sources → data_ref → data. Intégrité vérifiée à 100 %.
+- `bnp/` **lit les 3 JSON directement** (pas d'étape de build). `server.js` : `/api/catalog` renvoie
+  les 3 objets ; nouveaux endpoints `/api/source/path` (enregistre `chemin_local`) et
+  `/api/source/validate` (compare colonnes réelles vs attendues). Agrégateurs lus depuis
+  `local/catalog/aggregators.json`.
+- `index.html` refondu : page **Sources** (chemin réel par source + indicateur ✓/⚠ colonnes,
+  non bloquant) ; page **Données** (dictionnaire data.json). Onglets : Sources / Données /
+  Exécution / Exploration / Configuration.
+- Réconciliation de nommage validée par Ali : IBAN_ACCOUNT = IBAN_GROUP (fusionnés) ;
+  IBAN_SINGLETON distinct ; GA_GESTION_DIRECTE (yannick = source-sales) ; MC1/MC2 identiques ;
+  K2P8N = LIV_036 ; OVERRIDE_PAYEE_PAYER/DEBIT_REVENUE_MAPPING/OVERRIDE_COUNTRY = data clean ;
+  FEF/SCOPE abandonnés. Restent `a_confirmer` : CM360, FICHIER_ACHETEUR, CLEAN_SALES,
+  TYPE_ACTIONNAIRE, COMMISSIONED_PROCESSING.
+
+### Retraits
+- Supprimés : `column.json` (racine + copie catalog/), `local/catalog/sources.json`,
+  `local/catalog/columns.json`, `local/lib/build_bnp_catalog.py`, `bnp/catalog.json`.
+- Conservés : `local/catalog/functions.json`, `aggregators.json`, `lib/fonctions.py`.
+- **ARCHITECTURE.md non mis à jour** (règle : seul JOURNAL.md est éditable) → la doc faisant foi du
+  nouveau modèle est `configuration/README.md`.
+
+### Vérifs
+- `node --check server.js` OK ; serveur démarré (port 3999) ; `/api/catalog` (109/36/15),
+  `/api/aggregators` (4), `/api/source/path` + `/api/source/validate` testés sur CSV → `ok:true`.
+- Repo poussé sur GitHub `adjellalil/transfer_ax` (dossier `console-cash-management`).

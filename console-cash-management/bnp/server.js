@@ -14,7 +14,8 @@ function loadConfig() {
   const defaults = {
     port: 3000, livrables_path: '../local/livrables', python_path: 'python',
     sources_originals_path: '../local/sources/originals', sources_work_path: '../local/sources/work',
-    catalog_path: './catalog.json', default_output_path: '../local/outputs',
+    configuration_path: '../configuration', aggregators_path: '../local/catalog/aggregators.json',
+    default_output_path: '../local/outputs',
     default_filename_template: '{YYYY}{MM}{DD}_{HH}{MI}_{NAME}'
   };
   try {
@@ -27,6 +28,21 @@ function loadConfig() {
 let config = loadConfig();
 const CONFIG_PATH = path.join(APP_ROOT, 'config.json');
 const resolveCfg = (p) => path.resolve(APP_ROOT, p);
+
+// --- Catalogue : les 3 JSON maitres de configuration/ (lus directement) -----
+const configurationDir = () => resolveCfg(config.configuration_path || '../configuration');
+const aggregatorsFile = () => resolveCfg(config.aggregators_path || '../local/catalog/aggregators.json');
+function readJsonFile(fp) {
+  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch (e) { return null; }
+}
+function loadConfiguration() {
+  const dir = configurationDir();
+  return {
+    data: readJsonFile(path.join(dir, 'data.json')),
+    sources: readJsonFile(path.join(dir, 'sources.json')),
+    livrables: readJsonFile(path.join(dir, 'livrables.json')),
+  };
+}
 
 function resolveLivrablesPath() {
   const primary = resolveCfg(config.livrables_path);
@@ -117,28 +133,11 @@ function buildArgv(args) {
   return argv;
 }
 
-const SOURCE_ALIASES = {
-  // Canonical mappings derived from columns.json (columns.json is the source of truth)
-  ACCOUNT: 'IBAN',
-  IBAN_ACCOUNT: 'IBAN',
-  PARC: 'PARC_CLIENT',
-  REF_CLIENT: 'REFERENTIEL_CLIENTS_MULTICLE',
-  REFERENTIEL_CLIENT: 'REFERENTIEL_CLIENTS_MULTICLE',
-  SEGMENT: 'MATCHING_IDENTIFIANT_MARCHE',
-  IDSEG: 'MATCHING_IDENTIFIANT_MARCHE',
-  OPTI: 'OPTIFLUX',
-  SALES: 'GA_GESTION_DIRECTE', // per user correction
-  YANNICK: 'GA_GESTION_DIRECTE',
-  WORLDLINE: 'PRGM_MENSUEL',
-  PRGM: 'PRGM_MENSUEL',
-  ACHETEUR: 'PARC_CLIENT',
-  USAGE: 'MATCHING_PRODUIT_USAGE',
-  MONEXT: 'MONEXT_PECC_5212_MENSUEL',
-};
+// Affichage seul : les chips "Sources requises" parsees des docstrings sont indicatives.
+// La cartographie canonique faisant foi vit dans configuration/sources.json (champ "alias").
 function normalizeSourceName(name) {
   if (!name || typeof name !== 'string') return name;
-  const key = name.trim().toUpperCase();
-  return SOURCE_ALIASES[key] || key;
+  return name.trim().toUpperCase();
 }
 
 // --- Parsing du docstring d'en-tête (titre/code/sections/arguments/DECOMPOSITION) ----
@@ -242,15 +241,60 @@ function handleLivrables(res) {
 }
 
 function handleCatalog(res) {
-  try { sendJson(res, 200, JSON.parse(fs.readFileSync(resolveCfg(config.catalog_path), 'utf8'))); }
-  catch (e) { sendJson(res, 200, { version: '0', sources: [], columns: [], source_columns: [], aggregators: [], functions: [], error: 'catalog.json absent' }); }
+  const c = loadConfiguration();
+  if (!c.sources) {
+    return sendJson(res, 200, { error: 'configuration/ illisible (data/sources/livrables.json)',
+      data: { datas: {} }, sources: { sources: {} }, livrables: { livrables: {} } });
+  }
+  sendJson(res, 200, c);
 }
 
 function handleAggregators(res) {
-  try {
-    const cat = JSON.parse(fs.readFileSync(resolveCfg(config.catalog_path), 'utf8'));
-    sendJson(res, 200, cat.aggregators || []);
-  } catch (e) { sendJson(res, 200, []); }
+  const agg = readJsonFile(aggregatorsFile());
+  if (!agg || !agg.aggregators) return sendJson(res, 200, []);
+  const list = Object.entries(agg.aggregators).map(([ref, v]) => ({ ref, ...v }));
+  sendJson(res, 200, list);
+}
+
+// Enregistre le chemin_local d'une source dans configuration/sources.json.
+async function handleSourcePath(req, res) {
+  const body = await readBody(req);
+  if (!body || !body.ref) return sendJson(res, 400, { error: 'Paramètre "ref" manquant' });
+  const fp = path.join(configurationDir(), 'sources.json');
+  const doc = readJsonFile(fp);
+  if (!doc || !doc.sources) return sendJson(res, 500, { error: 'sources.json illisible' });
+  if (!doc.sources[body.ref]) return sendJson(res, 404, { error: `Source inconnue : ${body.ref}` });
+  doc.sources[body.ref].chemin_local = String(body.chemin_local || '');
+  try { fs.writeFileSync(fp, JSON.stringify(doc, null, 2), 'utf8'); }
+  catch (e) { return sendJson(res, 500, { error: e.message }); }
+  sendJson(res, 200, { ref: body.ref, chemin_local: doc.sources[body.ref].chemin_local });
+}
+
+// Valide le fichier reel d'une source : compare ses colonnes a celles attendues au catalogue.
+async function handleSourceValidate(params, res) {
+  const ref = params.get('ref');
+  const c = loadConfiguration();
+  const src = c.sources && c.sources.sources && c.sources.sources[ref];
+  if (!src) return sendJson(res, 404, { error: `Source inconnue : ${ref}` });
+  const p = (src.chemin_local || '').trim();
+  const expected = (src.colonnes || []).map((col) => col.nom_dans_fichier);
+  if (!p) return sendJson(res, 200, { ok: null, reason: 'Aucun chemin_local renseigné', expected });
+  const prev = await runExplore(['--action', 'preview', '--path', p, '--limit', '1']);
+  if (prev.error) return sendJson(res, 200, { ok: false, error: prev.error, expected });
+  const actual = prev.columns || [];
+  const norm = (s) => String(s).trim().toLowerCase();
+  const aset = new Set(actual.map(norm)), eset = new Set(expected.map(norm));
+  const missing = expected.filter((e) => !aset.has(norm(e)));
+  const extra = actual.filter((a) => !eset.has(norm(a)));
+  const namesMatch = expected.length > 0 && missing.length === 0;
+  const countMatch = expected.length > 0 && actual.length === expected.length;
+  sendJson(res, 200, {
+    ok: expected.length === 0 ? null : (namesMatch && countMatch),
+    reason: expected.length === 0 ? 'Colonnes non documentées au catalogue' : undefined,
+    expected, actual, missing, extra,
+    count_expected: expected.length, count_actual: actual.length,
+    names_match: namesMatch, count_match: countMatch, total_rows: prev.total_rows,
+  });
 }
 
 function handleConfig(res) {
@@ -364,9 +408,9 @@ async function handleAggregatorRun(req, res) {
   const body = await readBody(req);
   if (!body) return sendJson(res, 400, { error: 'JSON invalide' });
   const ref = body.aggregator;
-  let cat;
-  try { cat = JSON.parse(fs.readFileSync(resolveCfg(config.catalog_path), 'utf8')); } catch (e) { return sendJson(res, 500, { error: 'catalog.json illisible' }); }
-  const agg = (cat.aggregators || []).find((a) => a.ref === ref);
+  const cat = readJsonFile(aggregatorsFile());
+  if (!cat || !cat.aggregators) return sendJson(res, 500, { error: 'aggregators.json illisible' });
+  const agg = cat.aggregators[ref];
   if (!agg) return sendJson(res, 404, { error: 'Agrégateur inconnu' });
   if (agg.status !== 'actif') return sendJson(res, 400, { error: `Agrégateur "${ref}" non disponible (statut: ${agg.status})` });
   const sp = path.resolve(APP_ROOT, '..', 'local', agg.script);
@@ -393,6 +437,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/api/browse') return handleBrowse(q, res);
     if (req.method === 'GET' && p === '/api/config') return handleConfig(res);
     if (req.method === 'POST' && p === '/api/config') return handleConfigSave(req, res);
+    if (req.method === 'POST' && p === '/api/source/path') return handleSourcePath(req, res);
+    if (req.method === 'GET' && p === '/api/source/validate') return handleSourceValidate(q, res);
     if (req.method === 'POST' && p === '/api/script/save') return handleScriptSave(req, res);
     if (req.method === 'POST' && p === '/api/script/create') return handleScriptCreate(req, res);
     if (req.method === 'GET' && p === '/api/file/preview')

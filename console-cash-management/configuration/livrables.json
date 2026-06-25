@@ -112,11 +112,10 @@
         {"arg": "--stock", "source_ref": "CCO_STOCK", "obligatoire": true, "nom_dans_script": "STOCK cartes agrege [66Z3Q]"},
         {"arg": "--worldline", "source_ref": "PRGM_AGREGE", "obligatoire": true, "nom_dans_script": "Programmes Worldline consolides"},
         {"arg": "--monext", "source_ref": "MONEXT_AGREGE", "obligatoire": true, "nom_dans_script": "Notes de frais MONEXT consolidees"},
-        {"arg": "--matching-usage", "source_ref": "MATCHING_USAGE", "obligatoire": false, "nom_dans_script": "Mapping usage Worldline"},
-        {"arg": "--fef", "source_ref": "FEF", "obligatoire": false, "nom_dans_script": "FEF Eric Tardy (adossement)"},
-        {"arg": "--scope", "source_ref": "SCOPE_HOLDING", "obligatoire": false, "nom_dans_script": "SCOPE Olivier Attali (codes APE holding)"}
+        {"arg": "--matching-usage", "source_ref": "MATCHING_USAGE", "obligatoire": false, "nom_dans_script": "Mapping usage Worldline"}
       ],
-      "datas_produites": ["FLUX", "PNB_TOTAL"], "outputs": ["csv", "xlsx"], "notes": ""
+      "datas_produites": ["FLUX", "PNB_TOTAL"], "outputs": ["csv", "xlsx"],
+      "notes": "Le script expose aussi --fef (FEF Eric Tardy) et --scope (SCOPE Olivier Attali) en optionnel ; non catalogues (abandonnes par Ali)."
     },
 
     "BNP_LIV_027": {
@@ -169,13 +168,13 @@
         {"arg": "--prgm", "source_ref": "PRGM_AGREGE", "obligatoire": true, "nom_dans_script": "CSV PRGM"},
         {"arg": "--acheteur", "source_ref": "FICHIER_ACHETEUR", "obligatoire": true, "nom_dans_script": "CSV ACHETEUR"},
         {"arg": "--parc", "source_ref": "PARC_CLIENT", "obligatoire": true, "nom_dans_script": "CSV PARC (RC -> RMPM)"},
-        {"arg": "--iban-groupe", "source_ref": "IBAN_GROUP", "obligatoire": true, "nom_dans_script": "CSV IBAN_GROUPE (FORTIS groupe)"},
+        {"arg": "--iban-groupe", "source_ref": "IBAN_ACCOUNT", "obligatoire": true, "nom_dans_script": "CSV IBAN_GROUPE (FORTIS groupe)"},
         {"arg": "--iban-singleton", "source_ref": "IBAN_SINGLETON", "obligatoire": true, "nom_dans_script": "CSV IBAN_SINGLETON (FORTIS singleton)"},
         {"arg": "--absorbes", "source_ref": "ABSORBES", "obligatoire": true, "nom_dans_script": "CSV RMPM absorbes (source -> nouveau)"},
         {"arg": "--lookup-input", "source_ref": null, "obligatoire": false, "nom_dans_script": "CSV 4 colonnes (MODE_2 uniquement)"}
       ],
       "datas_produites": ["ID_RC_FINAL", "DIAGNOSTIC"], "outputs": ["xlsx"],
-      "notes": "Ici IBAN_GROUP et IBAN_SINGLETON sont DEUX fichiers distincts (FORTIS groupe vs singleton) — a confronter avec le 'BG Account' (IBAN_ACCOUNT) des autres livrables."
+      "notes": "--iban-groupe = IBAN_ACCOUNT (le 'FORTIS groupe' = 'BG Account', confirme par Ali comme un seul fichier). IBAN_SINGLETON reste distinct."
     },
 
     "BNP_LIV_034": {

@@ -14,9 +14,11 @@ fichiers, consulter le catalogue de données.
 | `server.js` | Serveur Node natif (API + service de l'UI). |
 | `index.html` | UI complète (HTML+CSS+JS inline, monolithique — **par design**, pour l'envoi par mail). |
 | `_explore.py` | Utilitaire Python (aperçu / filtre / stats d'un CSV-XLSX). Appelé par le serveur. |
-| `catalog.json` | Miroir du catalogue de données (généré par `local/lib/build_bnp_catalog.py`). |
-| `config.json` | Chemins et options. |
+| `config.json` | Chemins et options (dont `configuration_path` -> les 3 JSON maîtres). |
 | `README.md` | Ce fichier. |
+
+> Le catalogue n'est plus un `catalog.json` généré : le serveur lit **directement** les 3 fichiers
+> de `../configuration/` (`data.json`, `sources.json`, `livrables.json`). Voir `configuration/README.md`.
 
 ## Lancement
 ```
@@ -27,11 +29,13 @@ Puis ouvrir `http://localhost:3000`. *(Port modifiable dans `config.json` ; surc
 possible via la variable d'environnement `PORT`.)*
 
 ## Onglets
-- **Livrables** — documentation, arbre de décomposition, formulaire de paramètres, exécution (logs live).
-- **Sources** — fichiers sources catalogués, accès rapide à l'explorateur et aux agrégateurs.
-- **Catalogue** — colonnes (source + calculées) consultables.
-- **Explorer** — ouvrir un CSV/XLSX, filtrer, statistiques par colonne (dataviz SVG).
-- **Agrégateurs** — consolidation des fichiers mensuels.
+- **Sources** — pour chaque source : renseigner le **fichier réel sur ce PC**, puis « Vérifier
+  colonnes » contrôle les noms/nombre de colonnes (indicateur ✓/⚠, non bloquant). Le chemin est
+  enregistré dans `configuration/sources.json` (`chemin_local`).
+- **Données** — dictionnaire des données (`data.json`) : définition, format, alias, sources où la
+  donnée apparaît, et pour les données calculées : dépendances / livrable producteur / formule.
+- **Exécution** — livrables (doc, décomposition, paramètres, logs live) et agrégateurs.
+- **Exploration** — ouvrir un CSV/XLSX, filtrer, statistiques par colonne (dataviz SVG).
 
 ## Configuration (`config.json`)
 Sur le PC ARTEONYS, les chemins pointent vers `../local/...`. Sur le PC BNP, adapte selon ton
@@ -40,7 +44,7 @@ arborescence (par ex. `livrables_path: "./livrables"`, `sources_*` vers tes doss
 
 ## Mises à jour par mail
 - Changement d'UI -> Ali reçoit un nouveau `index.html` et l'écrase. (1 seul fichier, le plus souvent.)
-- Changement de catalogue -> nouveau `catalog.json` (regénéré via `build_bnp_catalog.py`).
+- Changement de catalogue -> nouveau(x) fichier(s) de `configuration/` (`data/sources/livrables.json`).
 - Changement de logique serveur -> nouveau `server.js`.
 
 ## Note

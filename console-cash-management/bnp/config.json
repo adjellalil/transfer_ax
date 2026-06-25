@@ -3,7 +3,8 @@
   "livrables_path": "../local/livrables",
   "sources_originals_path": "../local/sources/originals",
   "sources_work_path": "../local/sources/work",
-  "catalog_path": "./catalog.json",
+  "configuration_path": "../configuration",
+  "aggregators_path": "../local/catalog/aggregators.json",
   "python_path": "python",
   "default_output_path": "../local/outputs",
   "default_filename_template": "{YYYY}{MM}{DD}_{HH}{MI}_{NAME}"

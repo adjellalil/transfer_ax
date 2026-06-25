@@ -145,9 +145,9 @@
 
 <script>
 "use strict";
-const S = { tab:"execution", livrables:[], catalog:null, aggregators:[], config:null,
+const S = { tab:"execution", livrables:[], cat:null, aggregators:[], config:null,
   curLiv:null, curScript:null, curScriptContent:null, meta:null, exp:{path:"",data:null,filters:[]},
-  execLog:[], catSearch:"", pickTarget:null };
+  execLog:[], catSearch:"", srcSearch:"", srcValid:{}, pickTarget:null };
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const TABS = [["sources","Sources"],["donnees","Données"],["execution","Exécution"],["exploration","Exploration"],["configuration","Configuration"]];
@@ -285,46 +285,86 @@ window.runScript=()=>{
 };
 
 // ========== SOURCES ==========
-function resolveCatalogPath(rel){
-  if(!rel||!S.config) return rel||"";
-  const work = String(S.config.sources_work_path||"").replace(/\\/g,'/').replace(/\/+$/,'');
-  const orig = String(S.config.sources_originals_path||"").replace(/\\/g,'/').replace(/\/+$/,'');
-  if(rel.startsWith("sources/work/")) return work ? `${work}/${rel.slice(12)}` : rel;
-  if(rel.startsWith("sources/originals/")) return orig ? `${orig}/${rel.slice(17)}` : rel;
-  return rel;
-}
-function browseSource(path){ if(!path) return; openModal(path,()=>{}); }
+const SRC_GROUPS = [["agrege","Agrégés"],["referentiel","Référentiels"],["override","Overrides / data clean"],["intermediaire","Intermédiaires (sorties de livrables)"],["autre","Autres"]];
+window.setTabAgg=(ref)=>{S.tab="execution";S.execMode="aggregators";S.execTarget=ref;renderNav();renderMain();};
+
 function renderSources(m){
-  const cat=S.catalog||{};const srcs=cat.sources||[];
-  const groups={agrege:[],referentiel:[],autre:[]};
-  srcs.forEach(s=>{(groups[s.type]||groups.autre).push(s);});
-  const workRoot = S.config ? S.config.sources_work_path||"" : "";
-  const origRoot = S.config ? S.config.sources_originals_path||"" : "";
-  let h=`<div class="page-h">Sources</div><div class="page-sub">${srcs.length} sources cataloguées.</div>
-    <div class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between;align-items:center">
-      <div><strong>Racine des sources travail</strong></div><div class="muted" style="font-family:var(--mono);font-size:12px">${esc(workRoot||'(non configuré)')}</div>
-    </div><div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
-      <button class="btn btn-sm" onclick="browseSource(${JSON.stringify(workRoot)})">Parcourir sources travail</button>
-      <button class="btn btn-sm" onclick="browseSource(${JSON.stringify(origRoot)})">Parcourir sources originaux</button>
-    </div></div>`;
-  for(const [k,label] of [["agrege","Agrégés"],["referentiel","Référentiels"],["autre","Autres"]]){
-    if(!groups[k].length)continue;
-    h+=`<div class="section-h">${label}</div>`;
-    groups[k].forEach(s=>{
-      const resolved = resolveCatalogPath(s.chemin_travail||s.chemin_original||"");
-      h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><strong>${esc(s.nom_canonique||s.ref)}</strong> <span class="badge">${esc(s.type)}</span></div>
-        <div class="row">${resolved?`<button class="btn btn-sm" onclick="browseSource(${JSON.stringify(resolved)})">Parcourir</button>`:""}
-        ${s.agregateur?`<button class="btn btn-sm" onclick="setTabAgg('${esc(s.agregateur)}')">Agrégateur</button>`:""}</div></div>
-        <div style="color:var(--text2);font-size:13px;margin:6px 0">${esc(s.description)}</div>
-        <div class="muted" style="font-size:11px;font-family:var(--mono)">${esc(resolved)}</div>
-        ${(s.colonnes_principales||s.columns||[]).length?`<div style="margin-top:6px">${(s.colonnes_principales||s.columns||[]).map(c=>`<span class="chip">${esc(c)}</span>`).join("")}</div>`:""}</div>`;
-    });
+  const sObj=(S.cat&&S.cat.sources&&S.cat.sources.sources)||{};
+  const entries=Object.entries(sObj);
+  const q=(S.srcSearch||"").toLowerCase();
+  const groups={}; SRC_GROUPS.forEach(([k])=>groups[k]=[]);
+  entries.forEach(([ref,s])=>{ (groups[s.type]||groups.autre).push([ref,s]); });
+  let h=`<div class="page-h">Sources</div><div class="page-sub">${entries.length} sources. Pour chaque source : indiquez le fichier réel sur ce PC puis « Vérifier colonnes » (contrôle non bloquant des noms/nombre de colonnes).</div>
+    <input type="text" id="srcq" placeholder="Rechercher une source (nom, alias, description)..." value="${esc(S.srcSearch||'')}" style="max-width:460px;margin-bottom:14px">`;
+  for(const [k,label] of SRC_GROUPS){
+    const list=groups[k].filter(([ref,s])=> !q || ref.toLowerCase().includes(q) || (s.alias||[]).join(' ').toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q));
+    if(!list.length)continue;
+    h+=`<div class="section-h">${label} (${list.length})</div>`;
+    list.forEach(([ref,s])=>{ h+=sourceCard(ref,s); });
   }
   m.innerHTML=h;
+  const sq=$("srcq"); if(sq) sq.oninput=(e)=>{S.srcSearch=e.target.value;renderSources(m);};
+  Object.keys(S.srcValid||{}).forEach(ref=>{ if($("vind-"+ref)) paintValid(ref,S.srcValid[ref]); });
 }
-window.toExplorer=(path)=>{S.exp.path=resolveWork(path);S.tab="exploration";renderNav();renderMain();setTimeout(loadExplorer,0);};
-window.setTabAgg=(ref)=>{S.tab="execution";S.execMode="aggregators";S.execTarget=ref;renderNav();renderMain();};
-function resolveWork(rel){ return resolveCatalogPath(rel); }
+
+function sourceCard(ref,s){
+  const cols=s.colonnes||[];
+  const aconf=s.a_confirmer?'<span class="badge badge-warn">à confirmer</span>':'';
+  return `<div class="card" id="srccard-${esc(ref)}">
+    <div class="row" style="justify-content:space-between">
+      <div><strong>${esc(ref)}</strong> <span class="badge">${esc(s.type||'')}</span> ${aconf} <span id="vind-${esc(ref)}"></span></div>
+      <div class="muted" style="font-size:11px">${cols.length} colonne(s) attendue(s)</div>
+    </div>
+    <div style="color:var(--text2);font-size:13px;margin:6px 0">${esc(s.description||'')}</div>
+    ${(s.alias&&s.alias.length)?`<div class="muted" style="font-size:11px;margin-bottom:6px">alias : ${s.alias.map(a=>`<span class="chip">${esc(a)}</span>`).join('')}</div>`:''}
+    <label class="lbl">Fichier réel sur ce PC</label>
+    <div class="row">
+      <input type="text" id="path-${esc(ref)}" value="${esc(s.chemin_local||'')}" placeholder="(non renseigné)" style="max-width:520px">
+      <button class="btn btn-sm" onclick="pickSourcePath('${esc(ref)}')">Parcourir</button>
+      <button class="btn btn-sm" onclick="saveSourcePath('${esc(ref)}')">Enregistrer</button>
+      <button class="btn btn-sm btn-primary" onclick="validateSource('${esc(ref)}')">Vérifier colonnes</button>
+    </div>
+    <div id="vdetail-${esc(ref)}" style="font-size:12px;margin-top:8px"></div>
+    ${cols.length?`<div style="margin-top:8px"><span class="lbl">Colonnes attendues</span>${cols.map(c=>`<span class="chip" title="data : ${esc(c.data_ref||'(non reliée)')}">${esc(c.nom_dans_fichier)}</span>`).join('')}</div>`:''}
+  </div>`;
+}
+
+window.pickSourcePath=(ref)=>openModal(null,(full)=>{ const el=$("path-"+ref); if(el) el.value=full; });
+window.saveSourcePath=async(ref)=>{
+  const el=$("path-"+ref); const val=el?el.value.trim():'';
+  const ind=$("vind-"+ref); if(ind) ind.innerHTML='<span class="muted">…</span>';
+  try{
+    const r=await fetch('/api/source/path',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref,chemin_local:val})});
+    const j=await r.json();
+    if(!r.ok){ if(ind) ind.innerHTML=`<span style="color:var(--err)">${esc(j.error||r.status)}</span>`; return false; }
+    if(S.cat&&S.cat.sources&&S.cat.sources.sources[ref]) S.cat.sources.sources[ref].chemin_local=val;
+    if(ind) ind.innerHTML='<span class="badge badge-green">enregistré</span>';
+    return true;
+  }catch(e){ if(ind) ind.innerHTML='<span style="color:var(--err)">erreur réseau</span>'; return false; }
+};
+window.validateSource=async(ref)=>{
+  const ok=await saveSourcePath(ref);
+  const det=$("vdetail-"+ref); if(det) det.innerHTML='<span class="muted">Lecture du fichier…</span>';
+  try{
+    const r=await fetch('/api/source/validate?ref='+encodeURIComponent(ref));
+    const j=await r.json();
+    S.srcValid=S.srcValid||{}; S.srcValid[ref]=j; paintValid(ref,j);
+  }catch(e){ if(det) det.textContent='Erreur réseau'; }
+};
+function paintValid(ref,j){
+  const ind=$("vind-"+ref), det=$("vdetail-"+ref); if(!det) return;
+  if(j.error){ if(ind) ind.innerHTML='<span class="badge badge-warn">⚠ fichier illisible</span>'; det.innerHTML=`<span style="color:var(--err)">${esc(j.error)}</span>`; return; }
+  if(j.ok===null){ if(ind) ind.innerHTML='<span class="badge">non vérifiable</span>'; det.innerHTML=`<span class="muted">${esc(j.reason||'')}</span>`+(j.actual?columnsDiffHtml(j):''); return; }
+  if(ind) ind.innerHTML=j.ok?'<span class="badge badge-green">✓ colonnes OK</span>':'<span class="badge badge-warn">⚠ écart colonnes</span>';
+  det.innerHTML=columnsDiffHtml(j);
+}
+function columnsDiffHtml(j){
+  let h=`<div class="muted">${j.count_actual} colonne(s) dans le fichier / ${j.count_expected} attendue(s)${j.total_rows!=null?` — ${j.total_rows} ligne(s)`:''}</div>`;
+  if(j.missing&&j.missing.length) h+=`<div style="margin-top:4px"><span style="color:var(--err)">Manquantes :</span> ${j.missing.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
+  if(j.extra&&j.extra.length) h+=`<div style="margin-top:4px"><span style="color:var(--warn)">En trop :</span> ${j.extra.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
+  if(j.actual&&j.actual.length) h+=`<div style="margin-top:4px"><span class="lbl">Colonnes du fichier</span>${j.actual.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
+  return h;
+}
 
 function renderExecution(m){
   const mode=S.execMode||"livrables";
@@ -358,29 +398,38 @@ function renderExecLog(){
 }
 
 function renderDonnees(m){
-  const cat=S.catalog||{};
-  const cols=cat.columns||[];
-  const srcs=cat.sources||[];
-  const q=S.catSearch.toLowerCase();
-  const filt=cols.filter(c=>!q||c.name.toLowerCase().includes(q)||(c.definition||"").toLowerCase().includes(q));
-  const types={}; srcs.forEach(s=>{types[s.type]=(types[s.type]||0)+1;});
-  let h=`<div class="page-h">Données</div><div class="page-sub">Catalogue des sources et des colonnes pour l'analyse métier.</div>
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div class="card"><div class="section-h">Sources</div><div>${srcs.length} sources cataloguées</div>${Object.entries(types).map(([k,v])=>`<div class="chip">${esc(k)}: ${v}</div>`).join('')}</div>
-      <div class="card"><div class="section-h">Colonnes</div><div>${cols.length} colonnes cataloguées</div><div class="muted" style="margin-top:8px">Utilisez la recherche pour afficher un détail précis.</div></div>
-    </div>
-    <input type="text" id="catq" placeholder="Rechercher une colonne..." value="${esc(S.catSearch)}" style="max-width:420px;margin-bottom:14px">
-    <div class="split"><div class="list-col" id="cat-list" style="width:300px"></div><div class="detail-col" id="cat-detail"><p class="muted">Selectionnez une colonne.</p></div></div>`;
+  const datas=(S.cat&&S.cat.data&&S.cat.data.datas)||{};
+  const sObj=(S.cat&&S.cat.sources&&S.cat.sources.sources)||{};
+  const entries=Object.entries(datas);
+  const q=(S.catSearch||"").toLowerCase();
+  const filt=entries.filter(([id,d])=>!q||id.toLowerCase().includes(q)||(d.libelle||"").toLowerCase().includes(q)||(d.definition||"").toLowerCase().includes(q));
+  const usedBy={}; Object.entries(sObj).forEach(([ref,s])=>{(s.colonnes||[]).forEach(c=>{ if(c.data_ref){(usedBy[c.data_ref]=usedBy[c.data_ref]||[]).push(ref);} });});
+  let h=`<div class="page-h">Données</div><div class="page-sub">${entries.length} données cataloguées. Une donnée (ex. IBAN, ID_RP) peut apparaître dans plusieurs sources.</div>
+    <input type="text" id="catq" placeholder="Rechercher une donnée..." value="${esc(S.catSearch||'')}" style="max-width:420px;margin-bottom:14px">
+    <div class="split"><div class="list-col" id="cat-list" style="width:320px"></div><div class="detail-col" id="cat-detail"><p class="muted">Sélectionnez une donnée.</p></div></div>`;
   m.innerHTML=h;
   $("catq").oninput=(e)=>{S.catSearch=e.target.value;renderDonnees(m);};
   const cl=$("cat-list");
-  filt.forEach(c=>{
+  filt.forEach(([id,d])=>{
     const el=document.createElement("div");el.className="li";
-    el.innerHTML=`<div class="t">${esc(c.name)}</div><div class="m">${c.kind==="calculee"?'<span class="badge badge-green">calculee</span>':'<span class="badge">source</span>'}</div>`;
-    el.onclick=()=>{ $("cat-detail").innerHTML=catDetail(c); cl.querySelectorAll(".li").forEach(x=>x.classList.remove("active")); el.classList.add("active"); };
+    el.innerHTML=`<div class="t">${esc(id)}</div><div class="m">${d.calculee?'<span class="badge badge-green">calculée</span>':'<span class="badge">'+esc(d.famille||'source')+'</span>'}</div>`;
+    el.onclick=()=>{ $("cat-detail").innerHTML=dataDetail(id,d,usedBy[id]||[]); cl.querySelectorAll(".li").forEach(x=>x.classList.remove("active")); el.classList.add("active"); };
     cl.appendChild(el);
   });
-  if(!filt.length)cl.innerHTML='<p class="muted">Aucun resultat.</p>';
+  if(!filt.length)cl.innerHTML='<p class="muted">Aucun résultat.</p>';
+}
+function dataDetail(id,d,usedBy){
+  let h=`<div class="page-h">${esc(id)}</div><div class="muted" style="margin-bottom:12px">${esc(d.libelle||'')} — ${esc(d.famille||'')}${d.format?' · '+esc(d.format):''}</div>
+    <div class="card"><p>${esc(d.definition||'')}</p>
+    ${d.exemple?`<div style="margin-top:8px"><span class="lbl">Exemple</span><span class="chip">${esc(d.exemple)}</span></div>`:''}
+    ${(d.alias&&d.alias.length)?`<div style="margin-top:8px"><span class="lbl">Alias (noms rencontrés)</span>${d.alias.map(a=>`<span class="chip">${esc(a)}</span>`).join('')}</div>`:''}
+    ${usedBy.length?`<div style="margin-top:8px"><span class="lbl">Présente dans les sources</span>${usedBy.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>`:''}`;
+  if(d.calculee){
+    if(d.depends_on&&d.depends_on.length)h+=`<div style="margin-top:8px"><span class="lbl">Dépend de</span>${d.depends_on.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>`;
+    if(d.produite_par&&d.produite_par.length)h+=`<div style="margin-top:8px"><span class="lbl">Produite par</span>${d.produite_par.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>`;
+    if(d.formule)h+=`<div style="margin-top:8px"><span class="lbl">Formule</span><span style="font-size:13px">${esc(d.formule)}</span></div>`;
+  }
+  return h+`</div>`;
 }
 
 function renderConfig(m){
@@ -391,7 +440,8 @@ function renderConfig(m){
       ${renderConfigField('Chemin livrables', 'livrables_path', cfg.livrables_path||'../local/livrables')}
       ${renderConfigField('Chemin sources originales', 'sources_originals_path', cfg.sources_originals_path||'../local/sources/originals')}
       ${renderConfigField('Chemin sources travail', 'sources_work_path', cfg.sources_work_path||'../local/sources/work')}
-      ${renderConfigField('Chemin catalogue', 'catalog_path', cfg.catalog_path||'./catalog.json')}
+      ${renderConfigField('Dossier configuration (3 JSON)', 'configuration_path', cfg.configuration_path||'../configuration')}
+      ${renderConfigField('Fichier agrégateurs', 'aggregators_path', cfg.aggregators_path||'../local/catalog/aggregators.json')}
       ${renderConfigField('Chemin Python', 'python_path', cfg.python_path||'python')}
       ${renderConfigField('Chemin sortie par défaut', 'default_output_path', cfg.default_output_path||'../local/outputs')}
       ${renderConfigField('Template nom fichier', 'default_filename_template', cfg.default_filename_template||'{YYYY}{MM}{DD}_{HH}{MI}_{NAME}')}
@@ -403,7 +453,7 @@ function renderConfigField(label,id,value){
 }
 
 window.saveConfig=async()=>{
-  const keys=['port','livrables_path','sources_originals_path','sources_work_path','catalog_path','python_path','default_output_path','default_filename_template'];
+  const keys=['port','livrables_path','sources_originals_path','sources_work_path','configuration_path','aggregators_path','python_path','default_output_path','default_filename_template'];
   const payload={};
   keys.forEach(k=>{ const el=$("cfg-"+k); if(el) payload[k]=el.value.trim(); });
   const status=$("config-status"); status.textContent='Enregistrement...';
@@ -583,7 +633,7 @@ async function init(){
       fetch("/api/aggregators").then(r=>r.json()),
       fetch("/api/config").then(r=>r.json())
     ]);
-    S.livrables=lv;S.catalog=ct;S.aggregators=ag;S.config=cfg;
+    S.livrables=lv;S.cat=ct;S.aggregators=ag;S.config=cfg;
   }catch(e){console.error(e);}
   renderMain();
 }
