@@ -1,0 +1,4 @@
+# Cash Management Console — dépendances Python (PC BNP)
+pandas
+openpyxl
+duckdb     # lecture rapide CSV (les scripts retombent sur pandas si absent)

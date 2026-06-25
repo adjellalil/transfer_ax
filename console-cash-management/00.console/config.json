@@ -1,0 +1,10 @@
+{
+  "port": 3000,
+  "livrables_path": "../04.livrables",
+  "sources_path": "../03.sources",
+  "configuration_path": "../05.configuration",
+  "aggregators_path": "../05.configuration/aggregators.json",
+  "python_path": "python",
+  "default_output_path": "../07.outputs",
+  "default_filename_template": "{YYYY}{MM}{DD}_{HH}{MI}_{NAME}"
+}

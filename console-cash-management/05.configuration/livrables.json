@@ -1,0 +1,826 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-06-25",
+  "auteur": "Ali Djellalil",
+  "objet": "Catalogue des LIVRABLES. Chaque livrable lie ses entrees CLI (inputs[].arg) a une source canonique (inputs[].source_ref -> cle de sources.json) et declare les donnees qu'il produit (datas_produites -> cles de data.json). C'est la couche qui resout le probleme des mauvais noms de source dans le code : 'nom_dans_script' garde le libelle exact du script, 'source_ref' donne la source canonique.",
+  "conventions": {
+    "source_ref": "Cle de configuration/sources.json. C'est la source canonique reelle, quel que soit le nom porte par l'argument dans le script.",
+    "nom_dans_script": "Libelle/aide exact tel qu'ecrit dans le script (utile pour retrouver l'origine du mauvais nommage).",
+    "obligatoire": "true = argument requis ; false = optionnel.",
+    "datas_produites": "Donnees calculees produites en sortie (cles de data.json, calculee=true).",
+    "produit_source": "Pour les agregateurs : nom_canonique de la source que le livrable GENERE (au lieu d'en consommer)."
+  },
+  "livrables": {
+    "BNP_LIV_003": {
+      "code": "PRGM_AGG",
+      "titre": "Agregation Worldline (PRGM_MENSUEL -> PRGM_AGREGE)",
+      "script": null,
+      "status": "a_creer",
+      "inputs": [],
+      "produit_source": "PRGM_AGREGE",
+      "datas_produites": [],
+      "outputs": [
+        "csv"
+      ],
+      "notes": "Livrable conceptuel : agregateur PRGM non encore code (cf. HANDOFF)."
+    },
+    "BNP_LIV_004": {
+      "code": "N3096/66Z3Q/N7M4P",
+      "titre": "Agregation MONEXT / CCO (Flux, Stock, PECC)",
+      "scripts": [
+        {
+          "fichier": "04.livrables/BNP_LIV_004/01.N3096.py",
+          "code": "N3096",
+          "role": "Agrege les CCO Flux -> CCO_FLUX (NUMBER/AMOUNT/INTERCHANGE)",
+          "produit_source": "CCO_FLUX"
+        },
+        {
+          "fichier": "04.livrables/BNP_LIV_004/02.66Z3Q.py",
+          "code": "66Z3Q",
+          "role": "Agrege les CCO Stock -> CCO_STOCK",
+          "produit_source": "CCO_STOCK"
+        },
+        {
+          "fichier": "04.livrables/BNP_LIV_004/03.N7M4P.py",
+          "code": "N7M4P",
+          "role": "Fusionne les PECC-5212 mensuels -> MONEXT_AGREGE",
+          "produit_source": "MONEXT_AGREGE"
+        }
+      ],
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--input-folder",
+          "source_ref": null,
+          "obligatoire": true,
+          "nom_dans_script": "dossier source (fichiers bruts mensuels)"
+        },
+        {
+          "arg": "--existing-folder / --existing-file",
+          "source_ref": null,
+          "obligatoire": false,
+          "nom_dans_script": "mode incremental"
+        }
+      ],
+      "datas_produites": [],
+      "outputs": [
+        "csv"
+      ],
+      "notes": "Agregateurs : prennent un DOSSIER de fichiers bruts et produisent les sources consolidees. Contrat onglet Agregateurs : --input-folder / --output-file."
+    },
+    "BNP_LIV_017": {
+      "code": "M3X9R",
+      "titre": "Sales & PNB Analyzer",
+      "script": "04.livrables/BNP_LIV_017/01.M3X9R.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--source-parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT (CSV)"
+        },
+        {
+          "arg": "--source-cm360",
+          "source_ref": "CM360",
+          "obligatoire": true,
+          "nom_dans_script": "CM360 (Sales/RMPM du Legal Entity)"
+        },
+        {
+          "arg": "--source-prgm",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "PRGM_CONSOLIDE Worldline"
+        },
+        {
+          "arg": "--opti",
+          "source_ref": "OPTIFLUX",
+          "obligatoire": true,
+          "nom_dans_script": "OPTIFLUX"
+        },
+        {
+          "arg": "--matching-usage",
+          "source_ref": "MATCHING_USAGE",
+          "obligatoire": false,
+          "nom_dans_script": "MATCHING_USAGE produits -> usages"
+        }
+      ],
+      "datas_produites": [
+        "USAGE",
+        "PNB_TOTAL"
+      ],
+      "outputs": [
+        "csv"
+      ],
+      "notes": "PNB Worldline vides par defaut (PNB_TOTAL=0) sauf flag --pnb-cols a ajouter (cf. HANDOFF)."
+    },
+    "BNP_LIV_018": {
+      "code": "V2MRG",
+      "titre": "Analyse revenus cartes corporate (Worldline + CPC)",
+      "script": "04.livrables/BNP_LIV_018/01.V2MRG.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--prgm",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Fichier PRGM Worldline source"
+        },
+        {
+          "arg": "--ref-client",
+          "source_ref": "REFERENTIEL_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "REFERENTIEL CLIENT / Olivier"
+        },
+        {
+          "arg": "--segment",
+          "source_ref": "IDENTIFIANT_SEGMENT",
+          "obligatoire": true,
+          "nom_dans_script": "IDENTIFIANT-SEGMENT"
+        },
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT"
+        },
+        {
+          "arg": "--opti",
+          "source_ref": "OPTIFLUX",
+          "obligatoire": true,
+          "nom_dans_script": "OPTIFLUX"
+        },
+        {
+          "arg": "--yannick",
+          "source_ref": "GA_GESTION_DIRECTE",
+          "obligatoire": true,
+          "nom_dans_script": "YANNICK gestion directe/indirecte"
+        },
+        {
+          "arg": "--devises",
+          "source_ref": "DEVISES",
+          "obligatoire": true,
+          "nom_dans_script": "DEVISES Date|Devise|Taux"
+        },
+        {
+          "arg": "--account",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "BG-LE-RMPM ACCOUNT"
+        },
+        {
+          "arg": "--usage",
+          "source_ref": "MATCHING_USAGE",
+          "obligatoire": false,
+          "nom_dans_script": "MATCHING_USAGE"
+        },
+        {
+          "arg": "--bpe-retail",
+          "source_ref": "BPE_RETAIL",
+          "obligatoire": false,
+          "nom_dans_script": "BPE RETAIL"
+        },
+        {
+          "arg": "--mc1",
+          "source_ref": "MC1",
+          "obligatoire": false,
+          "nom_dans_script": "MATCHING_CLIENT 1"
+        },
+        {
+          "arg": "--mc2",
+          "source_ref": "MC2",
+          "obligatoire": false,
+          "nom_dans_script": "MATCHING_CLIENT 2"
+        }
+      ],
+      "datas_produites": [
+        "PNB_TOTAL",
+        "SEGMENT_SOURCE",
+        "GEO_GA",
+        "ENTREPRISE",
+        "BPE",
+        "FOUND_PARC",
+        "USAGE",
+        "DIAGNOSTIC"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "Exemple type du probleme de nommage : --account = 'BG-LE-RMPM ACCOUNT' -> source canonique IBAN_ACCOUNT."
+    },
+    "BNP_LIV_019": {
+      "code": "S8XPL",
+      "titre": "Variante/extension LIV_018 (base MONEXT)",
+      "script": "04.livrables/BNP_LIV_019/01.S8XPL.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Fichier MONEXT consolide (CSV)"
+        },
+        {
+          "arg": "--ref-client",
+          "source_ref": "REFERENTIEL_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "Referentiel client (fichier Olivier)"
+        },
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT"
+        },
+        {
+          "arg": "--opti",
+          "source_ref": "OPTIFLUX",
+          "obligatoire": true,
+          "nom_dans_script": "OPTIFLUX"
+        },
+        {
+          "arg": "--yannick",
+          "source_ref": "GA_GESTION_DIRECTE",
+          "obligatoire": true,
+          "nom_dans_script": "Gestion Directe/Indirecte"
+        },
+        {
+          "arg": "--geo",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "BG_LE_RMPM_COUNTRY (geographie GA & Entite)"
+        },
+        {
+          "arg": "--bpe-retail",
+          "source_ref": "BPE_RETAIL",
+          "obligatoire": false,
+          "nom_dans_script": "BPE RETAIL"
+        },
+        {
+          "arg": "--seg-agence",
+          "source_ref": "SEG_AGENCE",
+          "obligatoire": false,
+          "nom_dans_script": "SEGMENT AGENCE"
+        }
+      ],
+      "datas_produites": [
+        "FLUX",
+        "PNB_TOTAL",
+        "SEGMENT_SOURCE",
+        "GEO_GA",
+        "ENTREPRISE",
+        "BPE"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "--geo 'BG_LE_RMPM_COUNTRY' -> source canonique IBAN_ACCOUNT (meme fichier, usage geographie)."
+    },
+    "BNP_LIV_024": {
+      "code": "Q8YY0",
+      "titre": "Analyseur croise Worldline + MONEXT (multi-pivot)",
+      "script": "04.livrables/BNP_LIV_024/01.Q8YY0.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--wl-prgm",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "PRGM Worldline"
+        },
+        {
+          "arg": "--mx-monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "MONEXT"
+        },
+        {
+          "arg": "--ref-client",
+          "source_ref": "REFERENTIEL_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "REFERENTIEL_CLIENT"
+        },
+        {
+          "arg": "--idseg",
+          "source_ref": "IDENTIFIANT_SEGMENT",
+          "obligatoire": true,
+          "nom_dans_script": "IDENTIFIANT_SEGMENT"
+        },
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT"
+        },
+        {
+          "arg": "--account",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "ACCOUNT (IBAN -> GA/RMPM)"
+        },
+        {
+          "arg": "--devises",
+          "source_ref": "DEVISES",
+          "obligatoire": true,
+          "nom_dans_script": "DEVISES"
+        },
+        {
+          "arg": "--monitoring",
+          "source_ref": "MONITORING",
+          "obligatoire": true,
+          "nom_dans_script": "MONITORING"
+        }
+      ],
+      "datas_produites": [
+        "GEO_GA",
+        "PNB_TOTAL"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "BPE_RETAIL/SEG_AGENCE/USAGE/MC1/MC2 exposes mais non consommes (parite UI, cf. HANDOFF)."
+    },
+    "BNP_LIV_026": {
+      "code": "B2PME",
+      "titre": "CCO PME Dashboard v14",
+      "script": "04.livrables/BNP_LIV_026/01.B2PME.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT (segment PME)"
+        },
+        {
+          "arg": "--flux-amount",
+          "source_ref": "CCO_FLUX",
+          "obligatoire": true,
+          "nom_dans_script": "FLUX CCO agrege - montants"
+        },
+        {
+          "arg": "--flux-number",
+          "source_ref": "CCO_FLUX",
+          "obligatoire": true,
+          "nom_dans_script": "FLUX CCO agrege - nombres"
+        },
+        {
+          "arg": "--flux-interchange",
+          "source_ref": "CCO_FLUX",
+          "obligatoire": true,
+          "nom_dans_script": "FLUX CCO agrege - interchange"
+        },
+        {
+          "arg": "--stock",
+          "source_ref": "CCO_STOCK",
+          "obligatoire": true,
+          "nom_dans_script": "STOCK cartes agrege [66Z3Q]"
+        },
+        {
+          "arg": "--worldline",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Programmes Worldline consolides"
+        },
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Notes de frais MONEXT consolidees"
+        },
+        {
+          "arg": "--matching-usage",
+          "source_ref": "MATCHING_USAGE",
+          "obligatoire": false,
+          "nom_dans_script": "Mapping usage Worldline"
+        }
+      ],
+      "datas_produites": [
+        "FLUX",
+        "PNB_TOTAL"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "Le script expose aussi --fef (FEF Eric Tardy) et --scope (SCOPE Olivier Attali) en optionnel ; non catalogues (abandonnes par Ali)."
+    },
+    "BNP_LIV_027": {
+      "code": "FSUB3",
+      "titre": "MONEXT Comparaison annuelle",
+      "script": "04.livrables/BNP_LIV_027/01.FSUB3.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--source-monext-detail",
+          "source_ref": "MONEXT_DETAIL_K2P8N",
+          "obligatoire": true,
+          "nom_dans_script": "CSV detail MONEXT ANALYZER [K2P8N]"
+        }
+      ],
+      "datas_produites": [
+        "PNB_TOTAL"
+      ],
+      "outputs": [
+        "xlsx"
+      ],
+      "notes": "Consomme la SORTIE d'un autre livrable (K2P8N), pas une source brute. Chainage de livrables."
+    },
+    "BNP_LIV_029": {
+      "code": "C2SME",
+      "titre": "Analyse flux annuel (MONEXT + Worldline)",
+      "script": "04.livrables/BNP_LIV_029/01.C2SME.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT"
+        },
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "MONEXT"
+        },
+        {
+          "arg": "--worldline",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Worldline PRGM"
+        },
+        {
+          "arg": "--bpe-retail",
+          "source_ref": "BPE_RETAIL",
+          "obligatoire": false,
+          "nom_dans_script": "BPE RETAIL"
+        }
+      ],
+      "datas_produites": [
+        "FLUX_2025",
+        "FLUX"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": ""
+    },
+    "BNP_LIV_030": {
+      "code": "C7MWZ",
+      "titre": "Analyse flux annuel (variante OptiFlux)",
+      "script": "04.livrables/BNP_LIV_030/01.C7MWZ.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "MONEXT"
+        },
+        {
+          "arg": "--worldline",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Worldline PRGM"
+        },
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "PARC_CLIENT"
+        },
+        {
+          "arg": "--optiflux",
+          "source_ref": "OPTIFLUX",
+          "obligatoire": true,
+          "nom_dans_script": "OPTIFLUX"
+        }
+      ],
+      "datas_produites": [
+        "FLUX_2025",
+        "FLUX"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": ""
+    },
+    "BNP_LIV_032": {
+      "code": "TXVLV",
+      "titre": "CPC Animation Commerciale v16",
+      "script": "04.livrables/BNP_LIV_032/01.TXVLV.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--source-prgm",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "PRGM Worldline (41 colonnes)"
+        },
+        {
+          "arg": "--source-acheteur",
+          "source_ref": "FICHIER_ACHETEUR",
+          "obligatoire": true,
+          "nom_dans_script": "ACHETEUR Casper/Noyan (72 colonnes)"
+        },
+        {
+          "arg": "--source-parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": false,
+          "nom_dans_script": "PARC_CLIENT (col6=RMPM, col14=FDC)"
+        },
+        {
+          "arg": "--source-account",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": false,
+          "nom_dans_script": "BG-LE-RMPM-ACCOUNT (IBAN -> GA/RMPM)"
+        },
+        {
+          "arg": "--source-sales",
+          "source_ref": "GA_GESTION_DIRECTE",
+          "obligatoire": false,
+          "nom_dans_script": "SALES/YANNICK (GA -> Sales -> GI)"
+        }
+      ],
+      "datas_produites": [
+        "ALERTE_BAISSE",
+        "FLUX"
+      ],
+      "outputs": [
+        "xlsx"
+      ],
+      "notes": "Jointure ID Programme (PRGM col4 = ACHETEUR col1). --source-sales = GA_GESTION_DIRECTE (NE PAS confondre avec CLEAN_SALES du LIV_034)."
+    },
+    "BNP_LIV_033": {
+      "code": "Q3JKL",
+      "titre": "RC Identifier Analyzer",
+      "script": "04.livrables/BNP_LIV_033/01.Q3JKL.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--prgm",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "CSV PRGM"
+        },
+        {
+          "arg": "--acheteur",
+          "source_ref": "FICHIER_ACHETEUR",
+          "obligatoire": true,
+          "nom_dans_script": "CSV ACHETEUR"
+        },
+        {
+          "arg": "--parc",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "CSV PARC (RC -> RMPM)"
+        },
+        {
+          "arg": "--iban-groupe",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "CSV IBAN_GROUPE (FORTIS groupe)"
+        },
+        {
+          "arg": "--iban-singleton",
+          "source_ref": "IBAN_SINGLETON",
+          "obligatoire": true,
+          "nom_dans_script": "CSV IBAN_SINGLETON (FORTIS singleton)"
+        },
+        {
+          "arg": "--absorbes",
+          "source_ref": "ABSORBES",
+          "obligatoire": true,
+          "nom_dans_script": "CSV RMPM absorbes (source -> nouveau)"
+        },
+        {
+          "arg": "--lookup-input",
+          "source_ref": null,
+          "obligatoire": false,
+          "nom_dans_script": "CSV 4 colonnes (MODE_2 uniquement)"
+        }
+      ],
+      "datas_produites": [
+        "ID_RC_FINAL",
+        "DIAGNOSTIC"
+      ],
+      "outputs": [
+        "xlsx"
+      ],
+      "notes": "--iban-groupe = IBAN_ACCOUNT (le 'FORTIS groupe' = 'BG Account', confirme par Ali comme un seul fichier). IBAN_SINGLETON reste distinct."
+    },
+    "BNP_LIV_034": {
+      "code": "W3RKN",
+      "titre": "CIB Revenus Analyzer v34",
+      "script": "04.livrables/BNP_LIV_034/01.W3RKN.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--source",
+          "source_ref": "MONITORING_ONBOARDING_CIB",
+          "obligatoire": true,
+          "nom_dans_script": "00. MONITORING_CIB / ONBORDING (base a enrichir)"
+        },
+        {
+          "arg": "--worldline",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "05. PRGM Worldline (flux CPC)"
+        },
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "04. MONEXT (flux CCO)"
+        },
+        {
+          "arg": "--account",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "01. IBAN_ACCOUNT (pivot priorite 1)"
+        },
+        {
+          "arg": "--ref-client",
+          "source_ref": "REFERENTIEL_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "02. REFERENTIEL_CLIENT (pivot priorite 2)"
+        },
+        {
+          "arg": "--idseg",
+          "source_ref": "IDENTIFIANT_SEGMENT",
+          "obligatoire": true,
+          "nom_dans_script": "03. IDENTIFIANT_SEGMENT (pivot priorite 3)"
+        },
+        {
+          "arg": "--devises",
+          "source_ref": "DEVISES",
+          "obligatoire": true,
+          "nom_dans_script": "09. DEVISES (Date YYYYMM | Code | Taux)"
+        },
+        {
+          "arg": "--type-of-card",
+          "source_ref": "CLEAN_TYPE_OF_CARD",
+          "obligatoire": true,
+          "nom_dans_script": "08. CLEAN_TYPE_OF_CARD (Type Original -> New)"
+        },
+        {
+          "arg": "--bejo-cartes",
+          "source_ref": "BEJO_CARTES",
+          "obligatoire": false,
+          "nom_dans_script": "12. BEJO_CARTES (requiert --use-bejo)"
+        },
+        {
+          "arg": "--bejo-flux",
+          "source_ref": "BEJO_FLUX",
+          "obligatoire": false,
+          "nom_dans_script": "13. BEJO_FLUX (requiert --use-bejo)"
+        },
+        {
+          "arg": "--country",
+          "source_ref": "COUNTRY",
+          "obligatoire": false,
+          "nom_dans_script": "06. CLEAN_COUNTRY (Pays Original -> New)"
+        },
+        {
+          "arg": "--sales",
+          "source_ref": "CLEAN_SALES",
+          "obligatoire": false,
+          "nom_dans_script": "07. CLEAN_SALES (Sales Original -> New)"
+        },
+        {
+          "arg": "--parc-client",
+          "source_ref": "PARC_CLIENT",
+          "obligatoire": false,
+          "nom_dans_script": "14. PARC_CLIENT (RMPM -> ID_RC + ID_RP)"
+        },
+        {
+          "arg": "--singleton",
+          "source_ref": "IBAN_SINGLETON",
+          "obligatoire": false,
+          "nom_dans_script": "15. SINGLETON (Nom entite -> IBAN)"
+        }
+      ],
+      "datas_produites": [
+        "ACTUAL_EXPOSURE",
+        "PNB_TOTAL",
+        "DIAGNOSTIC"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "Utilise aussi (override, non encore cables a un arg precis) : OVERRIDE_COUNTRY, OVERRIDE_PAYEE_PAYER, DEBIT_REVENUE_MAPPING, COMMISSIONED_PROCESSING, TYPE_ACTIONNAIRE, OVERRIDE_PRODUITS."
+    },
+    "BNP_LIV_035": {
+      "code": "K6BZP",
+      "titre": "Commissions reversees a CIB",
+      "script": "04.livrables/BNP_LIV_035/01.K6BZP.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--worldline",
+          "source_ref": "PRGM_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "Worldline PRGM"
+        },
+        {
+          "arg": "--monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "MONEXT"
+        },
+        {
+          "arg": "--account",
+          "source_ref": "IBAN_ACCOUNT",
+          "obligatoire": true,
+          "nom_dans_script": "ACCOUNT (IBAN -> GA/RMPM)"
+        },
+        {
+          "arg": "--ref-client",
+          "source_ref": "REFERENTIEL_CLIENT",
+          "obligatoire": true,
+          "nom_dans_script": "REFERENTIEL_CLIENT"
+        },
+        {
+          "arg": "--idseg",
+          "source_ref": "IDENTIFIANT_SEGMENT",
+          "obligatoire": true,
+          "nom_dans_script": "IDENTIFIANT_SEGMENT"
+        },
+        {
+          "arg": "--devises",
+          "source_ref": "DEVISES",
+          "obligatoire": true,
+          "nom_dans_script": "DEVISES"
+        },
+        {
+          "arg": "--rebate",
+          "source_ref": "REBATE",
+          "obligatoire": true,
+          "nom_dans_script": "REBATE"
+        },
+        {
+          "arg": "--country",
+          "source_ref": "COUNTRY",
+          "obligatoire": true,
+          "nom_dans_script": "COUNTRY (original -> anglais)"
+        },
+        {
+          "arg": "--override-pays-file",
+          "source_ref": "OVERRIDE_PAYS",
+          "obligatoire": false,
+          "nom_dans_script": "OVERRIDE_PAYS"
+        },
+        {
+          "arg": "--bejo-cartes",
+          "source_ref": "BEJO_CARTES",
+          "obligatoire": false,
+          "nom_dans_script": "BEJO_CARTES"
+        },
+        {
+          "arg": "--bejo-flux",
+          "source_ref": "BEJO_FLUX",
+          "obligatoire": false,
+          "nom_dans_script": "BEJO_FLUX"
+        }
+      ],
+      "datas_produites": [
+        "COMMISSION_TOTAL_HT"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": ""
+    },
+    "BNP_LIV_036": {
+      "code": "M5VTQ",
+      "titre": "MONEXT Analyzer (flux mensuel)",
+      "script": "04.livrables/BNP_LIV_036/01.M5VTQ.py",
+      "status": "active",
+      "inputs": [
+        {
+          "arg": "--source-monext",
+          "source_ref": "MONEXT_AGREGE",
+          "obligatoire": true,
+          "nom_dans_script": "MONEXT consolide"
+        }
+      ],
+      "datas_produites": [
+        "FLUX",
+        "PNB_TOTAL"
+      ],
+      "outputs": [
+        "csv",
+        "xlsx"
+      ],
+      "notes": "Une seule source MONEXT. Bon candidat de premier test sur PC BNP. Pourrait etre le producteur du detail consomme par LIV_027 (K2P8N) — a confirmer."
+    }
+  }
+}

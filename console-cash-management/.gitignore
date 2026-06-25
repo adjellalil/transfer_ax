@@ -1,4 +1,10 @@
 .venv/
 __pycache__/
 *.pyc
-local/outputs/
+07.outputs/*
+!07.outputs/.gitkeep
+# Données réelles BNP déposées dans 03.sources/ : JAMAIS versionnées
+03.sources/**/*.csv
+03.sources/**/*.xlsx
+03.sources/**/*.xls
+03.sources/**/*.txt
