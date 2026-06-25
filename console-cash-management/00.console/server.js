@@ -219,6 +219,31 @@ function runExplore(exArgs) {
   });
 }
 
+// Vrai si le dossier contient au moins un script .py.
+function dirHasPy(dir) {
+  try { return fs.readdirSync(dir).some((f) => f.toLowerCase().endsWith('.py')); }
+  catch (e) { return false; }
+}
+
+// Dossier (absolu) qui contient REELLEMENT les .py d'un livrable.
+// - cas dépôt : les .py sont directement dans <LIVRABLES_PATH>/<livrable>/
+// - cas PC BNP : ils sont dans un SOUS-dossier unique (typiquement "02.programme",
+//   mais ça peut changer). On le détecte automatiquement.
+function livrableScriptDir(livrable) {
+  const root = path.resolve(LIVRABLES_PATH);
+  const base = path.resolve(root, livrable);
+  if (!base.startsWith(root + path.sep)) return base; // hors périmètre : laissé tel quel
+  if (dirHasPy(base)) return base;
+  let subs = [];
+  try { subs = fs.readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name); }
+  catch (e) { return base; }
+  const withPy = subs.filter((s) => dirHasPy(path.join(base, s)));
+  if (!withPy.length) return base;
+  // priorité au nom évocateur (02.programme, programme, scripts, code, python), sinon ordre alpha.
+  const pref = withPy.find((s) => /programme|prog|script|code|python/i.test(s)) || withPy.sort()[0];
+  return path.join(base, pref);
+}
+
 // --- Endpoints lecture seule -----------------------------------------------
 function handleLivrables(res) {
   let dirs;
@@ -226,13 +251,15 @@ function handleLivrables(res) {
   const out = [];
   for (const d of dirs) {
     if (!d.isDirectory()) continue;
-    const dir = path.join(LIVRABLES_PATH, d.name);
-    let files = []; try { files = fs.readdirSync(dir); } catch (e) { /* ignore */ }
+    const base = path.join(LIVRABLES_PATH, d.name);
+    const sdir = livrableScriptDir(d.name);
+    let files = []; try { files = fs.readdirSync(sdir); } catch (e) { /* ignore */ }
     const scripts = files.filter((f) => f.toLowerCase().endsWith('.py') && f !== '_shared.py' && f !== 'a_console.py').sort();
     let readme = null;
-    const rp = path.join(dir, 'README.md');
-    if (fs.existsSync(rp)) { try { readme = fs.readFileSync(rp, 'utf8'); } catch (e) { /* ignore */ } }
-    out.push({ ref: d.name, scripts, readme });
+    for (const rp of [path.join(base, 'README.md'), path.join(sdir, 'README.md')]) {
+      if (fs.existsSync(rp)) { try { readme = fs.readFileSync(rp, 'utf8'); break; } catch (e) { /* ignore */ } }
+    }
+    out.push({ ref: d.name, scripts, readme, script_subdir: path.relative(base, sdir) });
   }
   out.sort((a, b) => a.ref.localeCompare(b.ref));
   sendJson(res, 200, out);
@@ -268,31 +295,104 @@ async function handleSourcePath(req, res) {
   sendJson(res, 200, { ref: body.ref, chemin_local: doc.sources[body.ref].chemin_local });
 }
 
-// Valide le fichier reel d'une source : compare ses colonnes a celles attendues au catalogue.
+// Valide le fichier reel d'une source par POSITION + nombre de colonnes.
+// Les livrables lisent les colonnes par POSITION (pas par nom d'en-tete) : on
+// verifie donc que le fichier a au moins `colonnes_min` colonnes et on affiche,
+// pour chaque colonne documentee, l'en-tete reel trouve a sa position (controle
+// visuel). On ne declare plus de "colonne manquante" sur un simple ecart de nom.
 async function handleSourceValidate(params, res) {
   const ref = params.get('ref');
   const c = loadConfiguration();
   const src = c.sources && c.sources.sources && c.sources.sources[ref];
   if (!src) return sendJson(res, 404, { error: `Source inconnue : ${ref}` });
   const p = (src.chemin_local || '').trim();
-  const expected = (src.colonnes || []).map((col) => col.nom_dans_fichier);
-  if (!p) return sendJson(res, 200, { ok: null, reason: 'Aucun chemin_local renseigné', expected });
+  const colonnes = src.colonnes || [];
+  const docMax = colonnes.reduce((m, col) => Math.max(m, col.position || 0), 0);
+  const minCols = src.colonnes_min || docMax;
+  const expected = colonnes.map((col) => col.nom_dans_fichier); // compat affichage
+  if (!p) return sendJson(res, 200, { ok: null, reason: 'Aucun chemin_local renseigné', expected, count_expected: minCols });
   const prev = await runExplore(['--action', 'preview', '--path', p, '--limit', '1']);
   if (prev.error) return sendJson(res, 200, { ok: false, error: prev.error, expected });
   const actual = prev.columns || [];
-  const norm = (s) => String(s).trim().toLowerCase();
-  const aset = new Set(actual.map(norm)), eset = new Set(expected.map(norm));
-  const missing = expected.filter((e) => !aset.has(norm(e)));
-  const extra = actual.filter((a) => !eset.has(norm(a)));
-  const namesMatch = expected.length > 0 && missing.length === 0;
-  const countMatch = expected.length > 0 && actual.length === expected.length;
+  if (minCols === 0) {
+    return sendJson(res, 200, {
+      ok: null, reason: 'Colonnes non documentées au catalogue',
+      actual, count_actual: actual.length, total_rows: prev.total_rows,
+    });
+  }
+  const mapping = colonnes.map((col) => ({
+    position: col.position,
+    attendu: col.nom_dans_fichier,
+    data_ref: col.data_ref || null,
+    note: col.note || null,
+    trouve: (col.position && col.position <= actual.length) ? actual[col.position - 1] : null,
+  }));
+  const missing_positions = mapping.filter((m) => m.trouve === null).map((m) => m.position);
+  const countOk = actual.length >= minCols;
   sendJson(res, 200, {
-    ok: expected.length === 0 ? null : (namesMatch && countMatch),
-    reason: expected.length === 0 ? 'Colonnes non documentées au catalogue' : undefined,
-    expected, actual, missing, extra,
-    count_expected: expected.length, count_actual: actual.length,
-    names_match: namesMatch, count_match: countMatch, total_rows: prev.total_rows,
+    ok: countOk,
+    mode_matching: src.mode_matching || 'position',
+    expected, actual,
+    mapping, missing_positions,
+    count_actual: actual.length,
+    count_expected: minCols, // = colonnes_min (nombre MINIMUM requis)
+    count_min: minCols, count_ok: countOk,
+    total_rows: prev.total_rows,
   });
+}
+
+// Auto-câblage des sources : à partir d'UN dossier racine, retrouve pour chaque
+// source du catalogue le sous-dossier portant son nom (ou un alias) et y choisit
+// le fichier le plus récent (préfixe numérique le plus élevé), puis renseigne
+// chemin_local. L'utilisateur peut ensuite corriger n'importe quelle source à la main.
+const SRC_EXTS = ['.csv', '.xlsx', '.xls', '.txt'];
+const normName = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+function numPrefix(name) { const m = String(name).match(/^\s*(\d+)/); return m ? parseInt(m[1], 10) : -1; }
+function pickSourceFile(dir) {
+  let ents; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return null; }
+  const files = ents.filter((f) => f.isFile() && SRC_EXTS.includes(path.extname(f.name).toLowerCase())).map((f) => f.name);
+  if (!files.length) return null;
+  files.sort((a, b) => (numPrefix(b) - numPrefix(a)) || b.localeCompare(a));
+  return path.join(dir, files[0]);
+}
+async function handleSourcesAutowire(req, res) {
+  const body = await readBody(req);
+  const root = body && String(body.root || '').trim();
+  if (!root) return sendJson(res, 400, { error: 'Paramètre "root" manquant' });
+  const rootAbs = path.resolve(root);
+  let st; try { st = fs.statSync(rootAbs); } catch (e) { return sendJson(res, 400, { error: `Dossier introuvable : ${rootAbs}` }); }
+  if (!st.isDirectory()) return sendJson(res, 400, { error: `Pas un dossier : ${rootAbs}` });
+  const fp = path.join(configurationDir(), 'sources.json');
+  const doc = readJsonFile(fp);
+  if (!doc || !doc.sources) return sendJson(res, 500, { error: 'sources.json illisible' });
+  // Index des dossiers sous la racine (racine + 2 niveaux : <root>/<categorie>/<NOM_SOURCE>).
+  const folderIndex = {};
+  const scan = (dir, depth) => {
+    let ents; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of ents) {
+      if (!e.isDirectory()) continue;
+      const abs = path.join(dir, e.name); const k = normName(e.name);
+      if (k && !folderIndex[k]) folderIndex[k] = abs;
+      if (depth > 0) scan(abs, depth - 1);
+    }
+  };
+  scan(rootAbs, 2);
+  const report = [];
+  for (const [ref, s] of Object.entries(doc.sources)) {
+    const names = [ref, s.nom_canonique, ...(s.alias || [])].filter(Boolean);
+    let dir = null, matched = null;
+    for (const nm of names) { const k = normName(nm); if (folderIndex[k]) { dir = folderIndex[k]; matched = nm; break; } }
+    if (!dir) { report.push({ ref, status: 'dossier_absent' }); continue; }
+    const file = pickSourceFile(dir);
+    if (!file) { report.push({ ref, status: 'dossier_vide', folder: dir, matched }); continue; }
+    s.chemin_local = file;
+    report.push({ ref, status: 'ok', folder: dir, file, matched });
+  }
+  try { fs.writeFileSync(fp, JSON.stringify(doc, null, 2), 'utf8'); }
+  catch (e) { return sendJson(res, 500, { error: e.message }); }
+  saveConfig({ sources_path: rootAbs }); // mémorise la racine choisie
+  const matchedCount = report.filter((r) => r.status === 'ok').length;
+  sendJson(res, 200, { root: rootAbs, total: report.length, matched: matchedCount, report, sources: doc.sources });
 }
 
 function handleConfig(res) {
@@ -310,7 +410,7 @@ async function handleConfigSave(req, res) {
 function handleScriptTree(params, res) {
   const livrable = params.get('livrable'), script = params.get('script');
   if (!safeName(livrable) || !safeName(script)) return sendJson(res, 400, { error: 'Paramètres invalides' });
-  const sp = path.resolve(LIVRABLES_PATH, livrable, script);
+  const sp = path.resolve(livrableScriptDir(livrable), script);
   if (!sp.startsWith(path.resolve(LIVRABLES_PATH) + path.sep) || !fs.existsSync(sp))
     return sendJson(res, 404, { error: 'Script introuvable' });
   try { sendJson(res, 200, { script, ...parseDocstring(fs.readFileSync(sp, 'utf8')) }); }
@@ -357,7 +457,7 @@ async function handleScriptRun(req, res) {
   const { livrable, script, args } = body;
   if (!safeName(livrable) || !safeName(script) || !script.toLowerCase().endsWith('.py'))
     return sendJson(res, 400, { error: 'Paramètres livrable/script invalides' });
-  const sp = path.resolve(LIVRABLES_PATH, livrable, script);
+  const sp = path.resolve(livrableScriptDir(livrable), script);
   if (!sp.startsWith(path.resolve(LIVRABLES_PATH) + path.sep)) return sendJson(res, 400, { error: 'Chemin hors périmètre' });
   if (!fs.existsSync(sp)) return sendJson(res, 404, { error: `Script introuvable : ${script}` });
   streamPython(res, sp, buildArgv(args), 'Lancement');
@@ -367,7 +467,7 @@ function handleScriptRead(params, res) {
   const livrable = params.get('livrable'), script = params.get('script');
   if (!safeName(livrable) || !safeName(script) || !script.toLowerCase().endsWith('.py'))
     return sendJson(res, 400, { error: 'Paramètres invalides' });
-  const sp = path.resolve(LIVRABLES_PATH, livrable, script);
+  const sp = path.resolve(livrableScriptDir(livrable), script);
   if (!sp.startsWith(path.resolve(LIVRABLES_PATH) + path.sep) || !fs.existsSync(sp))
     return sendJson(res, 404, { error: 'Script introuvable' });
   try { sendJson(res, 200, { script, content: fs.readFileSync(sp, 'utf8') }); }
@@ -380,7 +480,7 @@ async function handleScriptSave(req, res) {
   const { livrable, script, content } = body;
   if (!safeName(livrable) || !safeName(script) || !script.toLowerCase().endsWith('.py') || typeof content !== 'string')
     return sendJson(res, 400, { error: 'Paramètres invalides' });
-  const sp = path.resolve(LIVRABLES_PATH, livrable, script);
+  const sp = path.resolve(livrableScriptDir(livrable), script);
   if (!sp.startsWith(path.resolve(LIVRABLES_PATH) + path.sep)) return sendJson(res, 400, { error: 'Chemin hors périmètre' });
   try { fs.writeFileSync(sp, content, 'utf8'); sendJson(res, 200, { script, content }); }
   catch (e) { sendJson(res, 500, { error: e.message }); }
@@ -392,7 +492,7 @@ async function handleScriptCreate(req, res) {
   const { livrable, script, content } = body;
   if (!safeName(livrable) || !safeName(script) || !script.toLowerCase().endsWith('.py') || typeof content !== 'string')
     return sendJson(res, 400, { error: 'Paramètres invalides' });
-  const dir = path.resolve(LIVRABLES_PATH, livrable);
+  const dir = livrableScriptDir(livrable);
   if (!dir.startsWith(path.resolve(LIVRABLES_PATH) + path.sep) || !fs.existsSync(dir))
     return sendJson(res, 404, { error: 'Livrable introuvable' });
   const sp = path.resolve(dir, script);
@@ -436,6 +536,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/api/config') return handleConfig(res);
     if (req.method === 'POST' && p === '/api/config') return handleConfigSave(req, res);
     if (req.method === 'POST' && p === '/api/source/path') return handleSourcePath(req, res);
+    if (req.method === 'POST' && p === '/api/sources/autowire') return handleSourcesAutowire(req, res);
     if (req.method === 'GET' && p === '/api/source/validate') return handleSourceValidate(q, res);
     if (req.method === 'POST' && p === '/api/script/save') return handleScriptSave(req, res);
     if (req.method === 'POST' && p === '/api/script/create') return handleScriptCreate(req, res);

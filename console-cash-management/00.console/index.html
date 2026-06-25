@@ -195,8 +195,17 @@ function renderMain(){
 
 // ========== LIVRABLES ==========
 function renderLivrables(m){
-  m.innerHTML='<div class="split"><div class="list-col" id="liv-list"></div><div class="detail-col" id="liv-detail"></div></div>';
+  const lp=(S.config&&S.config.livrables_path)||'';
+  m.innerHTML=`<div class="card" style="margin-bottom:12px;padding:10px 14px">
+      <div class="row" style="justify-content:space-between">
+        <div><span class="lbl" style="margin:0 0 2px">Dossier racine des livrables (PC BNP)</span><span class="muted" style="font-family:var(--mono);font-size:11px">${esc(lp||'(non défini)')}</span></div>
+        <div class="row"><button class="btn btn-sm" onclick="pickLivrablesRoot()">Parcourir…</button><button class="btn btn-sm" onclick="reloadLivrables()">Recharger</button></div>
+      </div>
+      <div class="muted" style="font-size:11px;margin-top:4px">Choisissez le dossier qui contient les sous-dossiers LIV_… ; les scripts Python (sous-dossier type 02.programme) sont détectés automatiquement.</div>
+    </div>
+    <div class="split"><div class="list-col" id="liv-list"></div><div class="detail-col" id="liv-detail"></div></div>`;
   const lc=$("liv-list");
+  if(!S.livrables.length){ lc.innerHTML='<p class="muted" style="font-size:13px">Aucun livrable. Indiquez le dossier racine ci-dessus.</p>'; }
   S.livrables.forEach(l=>{
     const el=document.createElement("div");
     el.className="li"+(S.curLiv&&S.curLiv.ref===l.ref?" active":"");
@@ -253,12 +262,38 @@ function renderScript(d){
     ${meta.description?`<div class="card" style="margin-top:14px"><p style="margin:0">${esc(meta.description)}</p></div>`:""}
     ${meta.sources&&meta.sources.length?`<div class="card" style="margin-top:14px"><div class="section-h">Sources requises</div><div class="row" style="flex-wrap:wrap;gap:6px">${meta.sources.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div></div>`:""}
     <div class="section-h">Decomposition</div><div class="card">${treeHtml}</div>
-    <div class="section-h">Parametres</div><div class="card">${argsHtml}
+    <div class="section-h">Parametres</div><div class="card"><div id="prefill-note" class="muted" style="font-size:11px;margin-bottom:8px"></div>${argsHtml}
       <div style="margin-top:14px"><label class="lbl">Nom du fichier de sortie (tokens {YYYY}{MM}{DD}{HH}{MI}{NAME})</label>
       <input type="text" id="fname" value="{YYYY}{MM}{DD}_{HH}{MI}_${esc(meta.code||'output')}" oninput="previewName()"><div class="muted" id="fnamePrev" style="font-size:11px;margin-top:4px"></div></div>
       <div class="row" style="margin-top:16px"><button class="btn btn-primary" onclick="runScript()">&rarr; Lancer</button></div>
     </div>`;
   previewName();
+  prefillSourceArgs();
+}
+// Pré-remplit les champs d'arguments-source depuis chemin_local du catalogue.
+function tokLiv(s){const m=String(s).match(/LIV[_-]?0*(\d+)/i);return m?('LIV_'+String(m[1]).padStart(3,'0')):null;}
+function matchCatalogLivrable(ref){
+  const livs=(S.cat&&S.cat.livrables&&S.cat.livrables.livrables)||{};
+  if(livs[ref])return ref;
+  const t=tokLiv(ref);if(!t)return null;
+  return Object.keys(livs).find(k=>tokLiv(k)===t)||null;
+}
+function prefillSourceArgs(){
+  const livs=(S.cat&&S.cat.livrables&&S.cat.livrables.livrables)||{};
+  const srcs=(S.cat&&S.cat.sources&&S.cat.sources.sources)||{};
+  const key=S.curLiv&&matchCatalogLivrable(S.curLiv.ref);
+  const liv=key&&livs[key];if(!liv||!liv.inputs)return;
+  let n=0;
+  liv.inputs.forEach(inp=>{
+    if(!inp.source_ref)return;const s=srcs[inp.source_ref];if(!s||!s.chemin_local)return;
+    // inp.arg peut valoir "--prgm" ou "--existing-folder / --existing-file"
+    (inp.arg||'').split('/').forEach(part=>{
+      const flag=part.trim().replace(/^--/,'').split(/\s+/)[0];if(!flag)return;
+      const el=document.querySelector(`[data-flag="${flag}"]`);
+      if(el&&!el.value){el.value=s.chemin_local;el.style.background='var(--green-l)';el.title='Pré-rempli depuis la source '+inp.source_ref;n++;}
+    });
+  });
+  if(n){const b=document.getElementById('prefill-note');if(b)b.textContent=`${n} source(s) pré-remplie(s) depuis le catalogue (modifiables).`;}
 }
 function renderTree(nodes){ return nodes.map(n=>`<li><span class="node">${esc(n.label)}</span>${n.children&&n.children.length?`<ul>${renderTree(n.children)}</ul>`:""}</li>`).join(""); }
 window.backLiv=()=>{S.curScript=null;S.meta=null;renderMain();};
@@ -284,6 +319,17 @@ window.runScript=()=>{
   stream("/api/script/run",payload);
 };
 
+// ---------- Dossiers racine (auto-câblage) ----------
+async function saveConfigKey(key,val){
+  try{const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({[key]:val})});const j=await r.json();if(r.ok)S.config=j;return r.ok;}catch(e){return false;}
+}
+async function reloadLivrables(){
+  try{S.livrables=await fetch('/api/livrables').then(r=>r.json());}catch(e){}
+  S.curLiv=null;S.curScript=null;S.meta=null;renderMain();
+}
+window.reloadLivrables=reloadLivrables;
+window.pickLivrablesRoot=()=>openModal((S.config&&S.config.livrables_path)||null,async(full)=>{await saveConfigKey('livrables_path',full);await reloadLivrables();},{dir:true});
+
 // ========== SOURCES ==========
 const SRC_GROUPS = [["agrege","Agrégés"],["referentiel","Référentiels"],["override","Overrides / data clean"],["intermediaire","Intermédiaires (sorties de livrables)"],["autre","Autres"]];
 window.setTabAgg=(ref)=>{S.tab="execution";S.execMode="aggregators";S.execTarget=ref;renderNav();renderMain();};
@@ -294,7 +340,16 @@ function renderSources(m){
   const q=(S.srcSearch||"").toLowerCase();
   const groups={}; SRC_GROUPS.forEach(([k])=>groups[k]=[]);
   entries.forEach(([ref,s])=>{ (groups[s.type]||groups.autre).push([ref,s]); });
-  let h=`<div class="page-h">Sources</div><div class="page-sub">${entries.length} sources. Pour chaque source : indiquez le fichier réel sur ce PC puis « Vérifier colonnes » (contrôle non bloquant des noms/nombre de colonnes).</div>
+  const sp=(S.config&&S.config.sources_path)||'';
+  let h=`<div class="page-h">Sources</div><div class="page-sub">${entries.length} sources. Indiquez le dossier racine puis « Auto-détecter », ou renseignez chaque source à la main.</div>
+    <div class="card" style="margin-bottom:14px;padding:10px 14px">
+      <label class="lbl" style="margin:0 0 4px">Dossier racine des sources (PC BNP) — contient les catégories (ex. 01.interne / 02.plateforme / 03.client)</label>
+      <div class="row"><input type="text" id="src-root" value="${esc(sp)}" placeholder="(dossier racine des sources)" style="max-width:520px">
+        <button class="btn btn-sm" onclick="pickSourcesRoot()">Parcourir…</button>
+        <button class="btn btn-sm btn-primary" onclick="autowireSources()">Auto-détecter</button></div>
+      ${S.autowireSummary?`<div class="muted" style="font-size:12px;margin-top:6px">${esc(S.autowireSummary)}</div>`:''}
+      ${autowireReportHtml()}
+    </div>
     <input type="text" id="srcq" placeholder="Rechercher une source (nom, alias, description)..." value="${esc(S.srcSearch||'')}" style="max-width:460px;margin-bottom:14px">`;
   for(const [k,label] of SRC_GROUPS){
     const list=groups[k].filter(([ref,s])=> !q || ref.toLowerCase().includes(q) || (s.alias||[]).join(' ').toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q));
@@ -305,6 +360,32 @@ function renderSources(m){
   m.innerHTML=h;
   const sq=$("srcq"); if(sq) sq.oninput=(e)=>{S.srcSearch=e.target.value;renderSources(m);};
   Object.keys(S.srcValid||{}).forEach(ref=>{ if($("vind-"+ref)) paintValid(ref,S.srcValid[ref]); });
+}
+
+window.pickSourcesRoot=()=>openModal((S.config&&S.config.sources_path)||null,(full)=>{const el=$("src-root");if(el)el.value=full;},{dir:true});
+window.autowireSources=async()=>{
+  const el=$("src-root");const root=el?el.value.trim():'';
+  if(!root){S.autowireSummary="Indiquez d'abord un dossier racine.";return renderSources($("main"));}
+  S.autowireSummary='Détection en cours…';renderSources($("main"));
+  try{
+    const r=await fetch('/api/sources/autowire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({root})});
+    const j=await r.json();
+    if(!r.ok){S.autowireSummary='Erreur : '+(j.error||r.status);return renderSources($("main"));}
+    if(S.cat&&S.cat.sources)S.cat.sources.sources=j.sources;
+    if(S.config)S.config.sources_path=j.root;
+    S.autowireReport=j.report;S.srcValid={};
+    S.autowireSummary=`${j.matched}/${j.total} sources câblées depuis ${j.root}`;
+    renderSources($("main"));
+  }catch(e){S.autowireSummary='Erreur réseau';renderSources($("main"));}
+};
+function autowireReportHtml(){
+  const rep=S.autowireReport;if(!rep||!rep.length)return'';
+  const absent=rep.filter(r=>r.status==='dossier_absent').map(r=>r.ref);
+  const vide=rep.filter(r=>r.status==='dossier_vide').map(r=>r.ref);
+  let h='';
+  if(absent.length)h+=`<div style="margin-top:6px;font-size:12px"><span style="color:var(--warn)">Dossier non trouvé (${absent.length}) :</span> ${absent.map(r=>`<span class="chip">${esc(r)}</span>`).join('')}</div>`;
+  if(vide.length)h+=`<div style="margin-top:4px;font-size:12px"><span style="color:var(--warn)">Dossier sans fichier (${vide.length}) :</span> ${vide.map(r=>`<span class="chip">${esc(r)}</span>`).join('')}</div>`;
+  return h;
 }
 
 function sourceCard(ref,s){
@@ -355,14 +436,23 @@ function paintValid(ref,j){
   const ind=$("vind-"+ref), det=$("vdetail-"+ref); if(!det) return;
   if(j.error){ if(ind) ind.innerHTML='<span class="badge badge-warn">⚠ fichier illisible</span>'; det.innerHTML=`<span style="color:var(--err)">${esc(j.error)}</span>`; return; }
   if(j.ok===null){ if(ind) ind.innerHTML='<span class="badge">non vérifiable</span>'; det.innerHTML=`<span class="muted">${esc(j.reason||'')}</span>`+(j.actual?columnsDiffHtml(j):''); return; }
-  if(ind) ind.innerHTML=j.ok?'<span class="badge badge-green">✓ colonnes OK</span>':'<span class="badge badge-warn">⚠ écart colonnes</span>';
+  if(ind) ind.innerHTML=j.ok?'<span class="badge badge-green">✓ colonnes OK</span>':'<span class="badge badge-warn">⚠ trop peu de colonnes</span>';
   det.innerHTML=columnsDiffHtml(j);
 }
 function columnsDiffHtml(j){
-  let h=`<div class="muted">${j.count_actual} colonne(s) dans le fichier / ${j.count_expected} attendue(s)${j.total_rows!=null?` — ${j.total_rows} ligne(s)`:''}</div>`;
-  if(j.missing&&j.missing.length) h+=`<div style="margin-top:4px"><span style="color:var(--err)">Manquantes :</span> ${j.missing.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
-  if(j.extra&&j.extra.length) h+=`<div style="margin-top:4px"><span style="color:var(--warn)">En trop :</span> ${j.extra.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
-  if(j.actual&&j.actual.length) h+=`<div style="margin-top:4px"><span class="lbl">Colonnes du fichier</span>${j.actual.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`;
+  const exp=(j.count_expected!=null?j.count_expected:'?');
+  let h=`<div class="muted">${j.count_actual} colonne(s) dans le fichier / ${exp} minimum requise(s)${j.total_rows!=null?` — ${j.total_rows} ligne(s)`:''}${j.mode_matching==='nom'?' — <em>matching par nom d\'en-tête</em>':''}</div>`;
+  if(j.missing_positions&&j.missing_positions.length) h+=`<div style="margin-top:4px"><span style="color:var(--err)">Fichier trop court — positions absentes :</span> ${j.missing_positions.map(p=>`<span class="chip">col ${esc(p)}</span>`).join('')}</div>`;
+  if(j.mapping&&j.mapping.length){
+    h+=`<div style="margin-top:6px"><span class="lbl">Colonnes utilisées (position → attendu → trouvé)</span><table style="border-collapse:collapse;font-size:11px;margin-top:3px">`;
+    h+=j.mapping.map(m=>{
+      const tr=(m.trouve!==null)?esc(m.trouve):'<span style="color:var(--err)">absente</span>';
+      const nt=m.note?` <span class="muted" title="${esc(m.note)}" style="cursor:help">ⓘ</span>`:'';
+      return `<tr><td style="padding:1px 8px;color:var(--text2)">col ${m.position}</td><td style="padding:1px 8px"><span class="chip">${esc(m.attendu)}</span>${nt}</td><td style="padding:1px 8px">${tr}</td></tr>`;
+    }).join('');
+    h+=`</table></div>`;
+  }
+  if(j.actual&&j.actual.length) h+=`<div style="margin-top:6px"><span class="lbl">Colonnes du fichier (${j.actual.length})</span>${j.actual.map((c,i)=>`<span class="chip" title="position ${i+1}">${esc(c)}</span>`).join('')}</div>`;
   return h;
 }
 
@@ -434,16 +524,18 @@ function dataDetail(id,d,usedBy){
 
 function renderConfig(m){
   const cfg=S.config||{};
-  m.innerHTML=`<div class="page-h">Configuration</div><div class="page-sub">Modifiez la configuration de l'application et enregistrez-la localement.</div>
+  m.innerHTML=`<div class="page-h">Configuration</div><div class="page-sub">Chemins et options de l'application (enregistrés dans config.json).</div>
+    <div class="card" style="max-width:880px;margin-bottom:14px">
+      <div class="section-h" style="margin-top:0">Dossiers racine (PC BNP)</div>
+      ${renderPathField('Dossier racine des livrables', 'livrables_path', cfg.livrables_path||'../04.livrables')}
+      ${renderPathField('Dossier racine des sources', 'sources_path', cfg.sources_path||'../03.sources')}
+    </div>
     <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;max-width:880px">
       ${renderConfigField('Port', 'port', cfg.port||3000)}
-      ${renderConfigField('Chemin livrables', 'livrables_path', cfg.livrables_path||'../local/livrables')}
-      ${renderConfigField('Chemin sources originales', 'sources_originals_path', cfg.sources_originals_path||'../local/sources/originals')}
-      ${renderConfigField('Chemin sources travail', 'sources_work_path', cfg.sources_work_path||'../local/sources/work')}
-      ${renderConfigField('Dossier configuration (3 JSON)', 'configuration_path', cfg.configuration_path||'../configuration')}
-      ${renderConfigField('Fichier agrégateurs', 'aggregators_path', cfg.aggregators_path||'../local/catalog/aggregators.json')}
       ${renderConfigField('Chemin Python', 'python_path', cfg.python_path||'python')}
-      ${renderConfigField('Chemin sortie par défaut', 'default_output_path', cfg.default_output_path||'../local/outputs')}
+      ${renderConfigField('Dossier configuration (3 JSON)', 'configuration_path', cfg.configuration_path||'../05.configuration')}
+      ${renderConfigField('Fichier agrégateurs', 'aggregators_path', cfg.aggregators_path||'../05.configuration/aggregators.json')}
+      ${renderConfigField('Chemin sortie par défaut', 'default_output_path', cfg.default_output_path||'../07.outputs')}
       ${renderConfigField('Template nom fichier', 'default_filename_template', cfg.default_filename_template||'{YYYY}{MM}{DD}_{HH}{MI}_{NAME}')}
     </div>
     <div style="margin-top:18px"><button class="btn btn-primary" onclick="saveConfig()">Enregistrer</button> <span class="muted" id="config-status"></span></div>`;
@@ -451,9 +543,14 @@ function renderConfig(m){
 function renderConfigField(label,id,value){
   return `<div><label class="lbl" for="cfg-${id}">${esc(label)}</label><input type="text" id="cfg-${id}" value="${esc(value)}"></div>`;
 }
+function renderPathField(label,id,value){
+  return `<div style="margin-bottom:10px"><label class="lbl" for="cfg-${id}">${esc(label)}</label>
+    <div class="row"><input type="text" id="cfg-${id}" value="${esc(value)}" style="max-width:560px"><button class="btn btn-sm" onclick="pickCfgDir('${id}')">Parcourir…</button></div></div>`;
+}
+window.pickCfgDir=(id)=>openModal($("cfg-"+id)?$("cfg-"+id).value:null,(full)=>{const el=$("cfg-"+id);if(el)el.value=full;},{dir:true});
 
 window.saveConfig=async()=>{
-  const keys=['port','livrables_path','sources_originals_path','sources_work_path','configuration_path','aggregators_path','python_path','default_output_path','default_filename_template'];
+  const keys=['port','livrables_path','sources_path','configuration_path','aggregators_path','python_path','default_output_path','default_filename_template'];
   const payload={};
   keys.forEach(k=>{ const el=$("cfg-"+k); if(el) payload[k]=el.value.trim(); });
   const status=$("config-status"); status.textContent='Enregistrement...';
@@ -461,7 +558,9 @@ window.saveConfig=async()=>{
     const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const j=await r.json();
     if(!r.ok){ status.textContent='Erreur : '+(j.error||r.status); return; }
-    S.config=j; status.textContent='Enregistré'; setTimeout(()=>{status.textContent='';},3000);
+    S.config=j;
+    try{ S.livrables=await fetch('/api/livrables').then(x=>x.json()); }catch(e){}
+    status.textContent='Enregistré'; setTimeout(()=>{status.textContent='';},3000);
   }catch(e){ status.textContent='Erreur réseau'; }
 }
 
@@ -609,15 +708,18 @@ async function stream(url,payload){
 }
 
 // ---------- Modal navigateur ----------
-async function openModal(target,onPick){
-  S.pickTarget=onPick;$("modal").classList.add("open");
+// opts.dir=true : mode "choisir un dossier" (bouton ✓ en tête ; fichiers grisés/non cliquables).
+async function openModal(target,onPick,opts){
+  opts=opts||{};S.pickTarget=onPick;$("modal").classList.add("open");
   const list=$("modal-list");list.innerHTML='<div class="bi">Chargement...</div>';
   let data;try{const q=target?("?path="+encodeURIComponent(target)):"";const r=await fetch("/api/browse"+q);data=await r.json();if(!r.ok)throw new Error(data.error);}catch(e){list.innerHTML=`<div class="bi" style="color:var(--err)">${esc(e.message)}</div>`;return;}
   $("modal-path").textContent=data.path;list.innerHTML="";
-  if(data.parent){const up=document.createElement("div");up.className="bi";up.innerHTML='<span class="ic">▲</span><span>.. (parent)</span>';up.onclick=()=>openModal(data.parent,onPick);list.appendChild(up);}
+  if(opts.dir){const ch=document.createElement("div");ch.className="bi";ch.style.cssText="font-weight:600;color:var(--green-d);background:var(--green-l)";ch.innerHTML='<span class="ic">✓</span><span>Choisir ce dossier</span>';ch.onclick=()=>{onPick&&onPick(data.path);closeModal();};list.appendChild(ch);}
+  if(data.parent){const up=document.createElement("div");up.className="bi";up.innerHTML='<span class="ic">▲</span><span>.. (parent)</span>';up.onclick=()=>openModal(data.parent,onPick,opts);list.appendChild(up);}
   data.entries.forEach(en=>{const el=document.createElement("div");el.className="bi";
+    if(opts.dir&&en.type!=="dir")el.style.opacity=".45";
     el.innerHTML=(en.type==="dir"?'<span class="ic">▸</span>':'<span class="ic f">◇</span>')+`<span>${esc(en.name)}</span>`;
-    el.onclick=()=>{if(en.type==="dir")openModal(en.full,onPick);else{S.pickTarget&&S.pickTarget(en.full);closeModal();}};list.appendChild(el);});
+    el.onclick=()=>{if(en.type==="dir")openModal(en.full,onPick,opts);else if(!opts.dir){S.pickTarget&&S.pickTarget(en.full);closeModal();}};list.appendChild(el);});
 }
 function closeModal(){$("modal").classList.remove("open");}
 $("modal-close").onclick=closeModal;

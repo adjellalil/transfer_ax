@@ -160,7 +160,7 @@ MOIS_MAPPING = get_mois_mapping()
 
 DEFAULT_POSITIONS = {
     'prgm_mois': 2, 'prgm_nom_programme': 3, 'prgm_id_prog': 4, 'prgm_produit': 5,
-    'prgm_code_agence': 6, 'prgm_rs': 8, 'prgm_iban': 9, 'prgm_rc': 41,
+    'prgm_code_agence': 6, 'prgm_rs': 8, 'prgm_iban': 9, 'prgm_rc': 40,  # RC en col 40 (col 41 = DIFFERE ; aligne sur le consensus, etait 41)
     'parc_rp': 1, 'parc_code_agence': 4, 'parc_rmpm': 6,
     'parc_rs': 8, 'parc_code_ga': 11, 'parc_rc': 14,
     'opti_rs': 4, 'opti_iban': 65,

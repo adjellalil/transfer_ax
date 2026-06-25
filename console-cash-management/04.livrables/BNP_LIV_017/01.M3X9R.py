@@ -133,7 +133,7 @@ MOIS_MAPPING = {
 # Positions par défaut des colonnes (1-indexed)
 DEFAULT_POSITIONS = {
     'parc_rp': 1, 'parc_rc': 14, 'parc_rmpm': 6, 'parc_rs': 8, 'parc_sales': 12,
-    'prgm_date': 1, 'prgm_rc': 40, 'prgm_rs': 8, 'prgm_id_prog': 4, 'prgm_produit': 5,
+    'prgm_date': 2, 'prgm_rc': 40, 'prgm_rs': 8, 'prgm_id_prog': 4, 'prgm_produit': 5,  # MOIS en col 2 (aligne sur le consensus PRGM ; etait 1)
     'cm360_legal_entity': 7, 'cm360_sales': 6,
     'opti_rp': 8, 'opti_rs': 4,
     'ludo_id_prog': 2, 'ludo_produit': 3, 'ludo_usage': 4

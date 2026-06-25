@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "last_updated": "2026-06-25",
   "auteur": "Ali Djellalil",
   "objet": "Catalogue des SOURCES. Une source = un fichier. nom_canonique unique ; 'alias' liste tous les autres noms rencontres (dans les scripts, l'ancien sources.json, l'ancien column.json) pour lever l'ambiguite de nommage. 'colonnes[].data_ref' fait le lien vers configuration/data.json. 'chemin_local' est EDITABLE au lancement (page Configuration) pour pointer la source vers son fichier reel sur le PC.",
@@ -9,7 +9,10 @@
     "type": "agrege (produit par un agregateur) | referentiel (table maintenue) | override (correctif manuel) | intermediaire (sortie d'un autre livrable)",
     "chemin_local": "Vide par defaut. A renseigner sur le PC BNP : chemin absolu (ou relatif a une racine) du fichier reel. C'est l'enregistrement de la source au lancement.",
     "a_confirmer": "true = reconciliation de nommage a valider par Ali (cas ou deux noms POURRAIENT designer le meme fichier ou des fichiers distincts).",
-    "data_ref": "Pointe vers une cle de configuration/data.json. null = colonne non encore reliee a une donnee canonique."
+    "data_ref": "Pointe vers une cle de configuration/data.json. null = colonne non encore reliee a une donnee canonique.",
+    "colonnes_min": "Nombre MINIMUM de colonnes que le fichier reel doit avoir (= position max reellement consommee par les livrables). Base de la verification par position/comptage.",
+    "mode_matching": "position = les livrables lisent par numero de colonne (cas general) ; nom = ils detectent la colonne par mot-cle d'en-tete (CCO_FLUX/CCO_STOCK).",
+    "note": "colonnes[].position et colonnes_min refletent les POSITIONS REELLES consommees par le code des livrables (consensus 15 scripts, 2026-06-25). colonnes[].note signale les positions ambigues/variantes a confirmer sur un fichier reel."
   },
   "sources": {
     "PRGM_AGREGE": {
@@ -35,66 +38,123 @@
       "chemin_local": "",
       "colonnes": [
         {
-          "position": 1,
-          "nom_dans_fichier": "ID_PROG",
-          "data_ref": "ID_PROG"
-        },
-        {
           "position": 2,
           "nom_dans_fichier": "MOIS",
           "data_ref": "MOIS"
         },
         {
           "position": 3,
+          "nom_dans_fichier": "NOM_PROGRAMME",
+          "data_ref": "PROGRAMME_NOM"
+        },
+        {
+          "position": 4,
+          "nom_dans_fichier": "ID_PROGRAMME",
+          "data_ref": "ID_PROG",
+          "note": "Cle de jointure (= ACHETEUR col 1)"
+        },
+        {
+          "position": 5,
           "nom_dans_fichier": "PRODUIT",
           "data_ref": "PRODUIT"
         },
         {
-          "position": 4,
-          "nom_dans_fichier": "RC",
-          "data_ref": "ID_RC"
-        },
-        {
-          "position": 5,
-          "nom_dans_fichier": "RS",
-          "data_ref": "RS"
-        },
-        {
           "position": 6,
-          "nom_dans_fichier": "IBAN",
-          "data_ref": "IBAN"
-        },
-        {
-          "position": 7,
           "nom_dans_fichier": "CODE_AGENCE",
           "data_ref": "CODE_AGENCE"
         },
         {
+          "position": 7,
+          "nom_dans_fichier": "AGENCE_LIBELLE",
+          "data_ref": null
+        },
+        {
           "position": 8,
+          "nom_dans_fichier": "RS",
+          "data_ref": "RS"
+        },
+        {
+          "position": 9,
+          "nom_dans_fichier": "IBAN",
+          "data_ref": "IBAN"
+        },
+        {
+          "position": 10,
+          "nom_dans_fichier": "GROUPE",
+          "data_ref": null
+        },
+        {
+          "position": 11,
+          "nom_dans_fichier": "SOUS_GROUPE",
+          "data_ref": null
+        },
+        {
+          "position": 12,
           "nom_dans_fichier": "DEVISE",
           "data_ref": "DEVISE"
         },
         {
-          "position": 9,
+          "position": 13,
           "nom_dans_fichier": "PLAFOND",
           "data_ref": "PLAFOND"
         },
         {
-          "position": 10,
+          "position": 14,
           "nom_dans_fichier": "PERIODICITE",
           "data_ref": "PERIODE_MOIS"
         },
         {
-          "position": 11,
+          "position": 17,
           "nom_dans_fichier": "NB_CARTES",
-          "data_ref": "NB_CARTES"
+          "data_ref": "NB_CARTES",
+          "note": "LIV_032 lit NB_CARTES en col 15 - a confirmer sur fichier reel"
         },
         {
-          "position": 12,
+          "position": 21,
+          "nom_dans_fichier": "NB_TR_FOURNISSEUR",
+          "data_ref": null
+        },
+        {
+          "position": 22,
+          "nom_dans_fichier": "NB_TR_CB",
+          "data_ref": null
+        },
+        {
+          "position": 23,
+          "nom_dans_fichier": "NB_TR_VISA",
+          "data_ref": null
+        },
+        {
+          "position": 24,
+          "nom_dans_fichier": "DEPENSES (plage 24-29)",
+          "data_ref": "DEPENSES",
+          "note": "Cols 24-29 (proxi/retraits/VAD/fourn/CB/VISA) sommees en flux ; debut de la plage de conversion devise"
+        },
+        {
+          "position": 30,
+          "nom_dans_fichier": "PNB (plage 30-36)",
+          "data_ref": "PNB_TOTAL",
+          "note": "Cols 30-36 (cotis/abon/comm/interchanges/autres) sommees en PNB"
+        },
+        {
+          "position": 39,
+          "nom_dans_fichier": "PAYS_APPORTEUR",
+          "data_ref": "PAYS_APPORTEUR"
+        },
+        {
+          "position": 40,
+          "nom_dans_fichier": "RC",
+          "data_ref": "ID_RC",
+          "note": "Reference client - LIV_018/026 lisaient par erreur la col 41 (=DIFFERE), corrige"
+        },
+        {
+          "position": 41,
           "nom_dans_fichier": "DIFFERE",
           "data_ref": "PAIEMENT_DIFFERE"
         }
       ],
+      "colonnes_min": 41,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_017",
         "BNP_LIV_018",
@@ -138,75 +198,100 @@
         },
         {
           "position": 2,
-          "nom_dans_fichier": "GROUPE_AFFAIRES",
-          "data_ref": "CODE_GA"
+          "nom_dans_fichier": "NOM_PROGRAMME",
+          "data_ref": null,
+          "note": "LIV_019 l'exploite comme GROUPE_AFFAIRES"
         },
         {
-          "position": 3,
+          "position": 4,
           "nom_dans_fichier": "RS",
           "data_ref": "RS"
         },
         {
-          "position": 4,
+          "position": 5,
+          "nom_dans_fichier": "IDENTIFIANT_BANCAIRE",
+          "data_ref": null,
+          "note": "Colonne sacralisee ='valeur' par l'agregateur LIV_004/N7M4P"
+        },
+        {
+          "position": 7,
+          "nom_dans_fichier": "PAYS_APPORTEUR",
+          "data_ref": "PAYS_APPORTEUR"
+        },
+        {
+          "position": 8,
           "nom_dans_fichier": "CODE_AGENCE",
           "data_ref": "CODE_AGENCE"
         },
         {
-          "position": 5,
+          "position": 9,
           "nom_dans_fichier": "ID_RP",
-          "data_ref": "ID_RP"
+          "data_ref": "ID_RP",
+          "note": "Sacralisee"
         },
         {
-          "position": 6,
+          "position": 10,
           "nom_dans_fichier": "ID_RC",
-          "data_ref": "ID_RC"
+          "data_ref": "ID_RC",
+          "note": "Sacralisee"
         },
         {
-          "position": 7,
+          "position": 11,
           "nom_dans_fichier": "IBAN",
-          "data_ref": "IBAN"
+          "data_ref": "IBAN",
+          "note": "Sacralisee"
         },
         {
-          "position": 8,
+          "position": 12,
           "nom_dans_fichier": "NB_CARTES",
           "data_ref": "NB_CARTES"
         },
         {
-          "position": 9,
+          "position": 13,
+          "nom_dans_fichier": "DIFFERE",
+          "data_ref": "PAIEMENT_DIFFERE"
+        },
+        {
+          "position": 15,
           "nom_dans_fichier": "DEPENSES",
           "data_ref": "DEPENSES"
         },
         {
-          "position": 10,
+          "position": 16,
+          "nom_dans_fichier": "NB_TRANSACTIONS",
+          "data_ref": null
+        },
+        {
+          "position": 17,
           "nom_dans_fichier": "RETRAITS",
           "data_ref": "RETRAITS"
         },
         {
-          "position": 11,
-          "nom_dans_fichier": "PNB_NDF",
-          "data_ref": "PNB_NDF"
+          "position": 19,
+          "nom_dans_fichier": "PNB (debut plage 19-55)",
+          "data_ref": "PNB_TOTAL",
+          "note": "PNB = somme cols 19-55 sauf col 33"
         },
         {
-          "position": 12,
-          "nom_dans_fichier": "PNB_INTEREST",
-          "data_ref": "PNB_INTEREST"
+          "position": 21,
+          "nom_dans_fichier": "INTERCHANGE",
+          "data_ref": null,
+          "note": "Comptee x -1 dans le PNB"
         },
         {
-          "position": 13,
-          "nom_dans_fichier": "PNB_COMMISSION",
-          "data_ref": "PNB_COMMISSION"
+          "position": 33,
+          "nom_dans_fichier": "(exclue du PNB)",
+          "data_ref": null,
+          "note": "Colonne exclue de la somme PNB 19-55"
         },
         {
-          "position": 14,
-          "nom_dans_fichier": "PNB_CORPORATE",
-          "data_ref": "PNB_CORPORATE"
-        },
-        {
-          "position": 15,
-          "nom_dans_fichier": "DIFFERE",
-          "data_ref": "PAIEMENT_DIFFERE"
+          "position": 55,
+          "nom_dans_fichier": "PNB (fin plage 19-55)",
+          "data_ref": "PNB_TOTAL"
         }
       ],
+      "colonnes_min": 55,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_019",
         "BNP_LIV_024",
@@ -246,30 +331,63 @@
       "colonnes": [
         {
           "position": 1,
+          "nom_dans_fichier": "DATE",
+          "data_ref": "MOIS"
+        },
+        {
+          "position": 2,
+          "nom_dans_fichier": "Company",
+          "data_ref": "RS"
+        },
+        {
+          "position": 3,
+          "nom_dans_fichier": "Code",
+          "data_ref": "CODE_WORLDLINE"
+        },
+        {
+          "position": 4,
           "nom_dans_fichier": "ID_RP",
           "data_ref": "ID_RP"
         },
         {
-          "position": 2,
-          "nom_dans_fichier": "DATA",
+          "position": 5,
+          "nom_dans_fichier": "Product",
           "data_ref": "TYPE_CARTE"
         },
         {
-          "position": 3,
-          "nom_dans_fichier": "NUMBER",
-          "data_ref": "NUMBER"
+          "position": 6,
+          "nom_dans_fichier": "Trx_Type",
+          "data_ref": null
         },
         {
-          "position": 4,
-          "nom_dans_fichier": "AMOUNT",
-          "data_ref": "AMOUNT"
+          "position": 7,
+          "nom_dans_fichier": "Currency",
+          "data_ref": "DEVISE"
         },
         {
-          "position": 5,
-          "nom_dans_fichier": "INTERCHANGE",
-          "data_ref": "INTERCHANGE"
+          "position": 8,
+          "nom_dans_fichier": "Data",
+          "data_ref": null
+        },
+        {
+          "position": 9,
+          "nom_dans_fichier": "Valeur",
+          "data_ref": null,
+          "note": "Montant / nombre / interchange selon le fichier (_NUMBER/_AMOUNT/_INTERCHANGE)"
+        },
+        {
+          "position": 10,
+          "nom_dans_fichier": "Bank_Type",
+          "data_ref": null
+        },
+        {
+          "position": 11,
+          "nom_dans_fichier": "Bin_Type",
+          "data_ref": null
         }
       ],
+      "colonnes_min": 11,
+      "mode_matching": "nom",
       "livrables_utilisateurs": [
         "BNP_LIV_004",
         "BNP_LIV_026"
@@ -300,25 +418,67 @@
       "colonnes": [
         {
           "position": 1,
-          "nom_dans_fichier": "PORTFOLIO_ID",
-          "data_ref": "ID_FDC"
+          "nom_dans_fichier": "DATE",
+          "data_ref": "MOIS"
         },
         {
           "position": 2,
-          "nom_dans_fichier": "CLIENT_MGR_ID",
-          "data_ref": "SALES"
+          "nom_dans_fichier": "Organization_Unit_Code",
+          "data_ref": "CODE_AGENCE"
         },
         {
           "position": 3,
+          "nom_dans_fichier": "Portfolio_ID",
+          "data_ref": "ID_FDC"
+        },
+        {
+          "position": 4,
+          "nom_dans_fichier": "Client_Mgr_ID",
+          "data_ref": "SALES"
+        },
+        {
+          "position": 5,
+          "nom_dans_fichier": "Company",
+          "data_ref": "RS"
+        },
+        {
+          "position": 6,
+          "nom_dans_fichier": "Subsidiary_Department",
+          "data_ref": null
+        },
+        {
+          "position": 7,
           "nom_dans_fichier": "ID_RP",
           "data_ref": "ID_RP"
         },
         {
-          "position": 4,
-          "nom_dans_fichier": "STOCK",
+          "position": 8,
+          "nom_dans_fichier": "Product",
+          "data_ref": "TYPE_CARTE"
+        },
+        {
+          "position": 9,
+          "nom_dans_fichier": "Data",
+          "data_ref": null
+        },
+        {
+          "position": 10,
+          "nom_dans_fichier": "Stock",
           "data_ref": "NB_CARTES"
+        },
+        {
+          "position": 11,
+          "nom_dans_fichier": "Bank_Type",
+          "data_ref": null
+        },
+        {
+          "position": 12,
+          "nom_dans_fichier": "Bin_Type",
+          "data_ref": null
         }
       ],
+      "colonnes_min": 12,
+      "mode_matching": "nom",
       "livrables_utilisateurs": [
         "BNP_LIV_004",
         "BNP_LIV_026"
@@ -354,41 +514,55 @@
           "data_ref": "ID_RP"
         },
         {
-          "position": 2,
-          "nom_dans_fichier": "ID_RC",
-          "data_ref": "ID_RC"
+          "position": 4,
+          "nom_dans_fichier": "CODE_AGENCE",
+          "data_ref": "CODE_AGENCE"
         },
         {
-          "position": 3,
+          "position": 6,
           "nom_dans_fichier": "RMPM",
           "data_ref": "RMPM"
         },
         {
-          "position": 4,
+          "position": 7,
           "nom_dans_fichier": "SIREN",
           "data_ref": "SIREN"
         },
         {
-          "position": 5,
+          "position": 8,
           "nom_dans_fichier": "RS",
           "data_ref": "RS"
         },
         {
-          "position": 6,
+          "position": 9,
           "nom_dans_fichier": "SEGMENT",
           "data_ref": "SEGMENT"
         },
         {
-          "position": 7,
+          "position": 11,
           "nom_dans_fichier": "CODE_GA",
           "data_ref": "CODE_GA"
         },
         {
-          "position": 8,
+          "position": 12,
           "nom_dans_fichier": "NOM_GA",
           "data_ref": "NOM_GA"
+        },
+        {
+          "position": 13,
+          "nom_dans_fichier": "RC",
+          "data_ref": "ID_RC",
+          "note": "RC en col 13 (LIV_029/030/032/033) OU col 14 (LIV_017/019/024/026) - variante a confirmer"
+        },
+        {
+          "position": 14,
+          "nom_dans_fichier": "FDC / RC",
+          "data_ref": null,
+          "note": "FDC dans LIV_032 ; RC dans LIV_017/019/024/026"
         }
       ],
+      "colonnes_min": 14,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_017",
         "BNP_LIV_018",
@@ -483,6 +657,8 @@
           "data_ref": "NOM_GA"
         }
       ],
+      "colonnes_min": 11,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_019",
@@ -531,6 +707,8 @@
           "data_ref": "SEGMENT"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_019",
@@ -573,33 +751,33 @@
       "colonnes": [
         {
           "position": 1,
-          "nom_dans_fichier": "CODE_GA",
-          "data_ref": "CODE_GA"
-        },
-        {
-          "position": 2,
-          "nom_dans_fichier": "NOM_GA",
-          "data_ref": "NOM_GA"
-        },
-        {
-          "position": 3,
           "nom_dans_fichier": "PAYS_GA",
           "data_ref": "PAYS_GA"
         },
         {
+          "position": 2,
+          "nom_dans_fichier": "CODE_GA",
+          "data_ref": "CODE_GA"
+        },
+        {
+          "position": 3,
+          "nom_dans_fichier": "NOM_GA",
+          "data_ref": "NOM_GA"
+        },
+        {
           "position": 4,
+          "nom_dans_fichier": "PAYS_ENTITE",
+          "data_ref": "PAYS_ENTITE"
+        },
+        {
+          "position": 5,
           "nom_dans_fichier": "RMPM",
           "data_ref": "RMPM"
         },
         {
-          "position": 5,
+          "position": 6,
           "nom_dans_fichier": "NOM_ENTITE",
           "data_ref": "NOM_ENTITE"
-        },
-        {
-          "position": 6,
-          "nom_dans_fichier": "PAYS_ENTITE",
-          "data_ref": "PAYS_ENTITE"
         },
         {
           "position": 7,
@@ -607,6 +785,8 @@
           "data_ref": "IBAN"
         }
       ],
+      "colonnes_min": 7,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_019",
@@ -641,16 +821,24 @@
       "chemin_local": "",
       "colonnes": [
         {
-          "position": 1,
+          "position": 4,
           "nom_dans_fichier": "RS",
           "data_ref": "RS"
         },
         {
-          "position": 2,
+          "position": 8,
+          "nom_dans_fichier": "ID_RP",
+          "data_ref": "ID_RP",
+          "note": "Cle RP utilisee par LIV_017"
+        },
+        {
+          "position": 65,
           "nom_dans_fichier": "IBAN",
           "data_ref": "IBAN"
         }
       ],
+      "colonnes_min": 65,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_017",
         "BNP_LIV_018",
@@ -684,21 +872,19 @@
       "chemin_local": "",
       "colonnes": [
         {
-          "position": 1,
-          "nom_dans_fichier": "Legal Entity",
-          "data_ref": "ENTITE_JURIDIQUE"
-        },
-        {
-          "position": 2,
-          "nom_dans_fichier": "RMPM",
-          "data_ref": "RMPM"
-        },
-        {
-          "position": 3,
+          "position": 6,
           "nom_dans_fichier": "SALES",
           "data_ref": "SALES"
+        },
+        {
+          "position": 7,
+          "nom_dans_fichier": "Legal Entity",
+          "data_ref": "ENTITE_JURIDIQUE",
+          "note": "RMPM et RS extraits de ce champ"
         }
       ],
+      "colonnes_min": 7,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_017"
       ],
@@ -742,6 +928,8 @@
           "data_ref": "TAUX"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_024",
@@ -792,6 +980,8 @@
           "data_ref": "REBATE_MONTANT"
         }
       ],
+      "colonnes_min": 4,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_024",
         "BNP_LIV_034",
@@ -822,21 +1012,23 @@
       "chemin_local": "",
       "colonnes": [
         {
-          "position": 1,
+          "position": 2,
           "nom_dans_fichier": "ID_PROG",
           "data_ref": "ID_PROG"
         },
         {
-          "position": 2,
+          "position": 3,
           "nom_dans_fichier": "PRODUIT",
           "data_ref": "PRODUIT"
         },
         {
-          "position": 3,
+          "position": 4,
           "nom_dans_fichier": "USAGE",
           "data_ref": "USAGE"
         }
       ],
+      "colonnes_min": 4,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_017",
         "BNP_LIV_018",
@@ -882,6 +1074,8 @@
           "data_ref": "CODE_GA"
         }
       ],
+      "colonnes_min": 5,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_024"
@@ -926,6 +1120,8 @@
           "data_ref": "CODE_GA"
         }
       ],
+      "colonnes_min": 5,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_024"
@@ -959,6 +1155,8 @@
           "data_ref": "CODE_AGENCE"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_019",
@@ -996,11 +1194,14 @@
           "data_ref": "CODE_AGENCE"
         },
         {
-          "position": 2,
+          "position": 7,
           "nom_dans_fichier": "SOURCE",
-          "data_ref": "MARCHE"
+          "data_ref": "MARCHE",
+          "note": "BCEF -> ENTREPRISE, BPE -> BPE"
         }
       ],
+      "colonnes_min": 7,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_019",
         "BNP_LIV_024"
@@ -1038,16 +1239,18 @@
           "data_ref": "CODE_GA"
         },
         {
-          "position": 2,
+          "position": 3,
           "nom_dans_fichier": "SALES",
           "data_ref": "SALES"
         },
         {
-          "position": 3,
+          "position": 4,
           "nom_dans_fichier": "GESTION_INDIRECTE",
           "data_ref": "GESTION_INDIRECTE"
         }
       ],
+      "colonnes_min": 4,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_018",
         "BNP_LIV_019",
@@ -1083,7 +1286,8 @@
         {
           "position": 1,
           "nom_dans_fichier": "ID Programme",
-          "data_ref": "ID_PROG"
+          "data_ref": "ID_PROG",
+          "note": "Cle de jointure (= PRGM col 4)"
         },
         {
           "position": 2,
@@ -1096,9 +1300,29 @@
           "data_ref": "RS"
         },
         {
-          "position": 4,
-          "nom_dans_fichier": "N° TVA intracommunautaire",
-          "data_ref": "TVA_INTRA"
+          "position": 8,
+          "nom_dans_fichier": "Nom groupe",
+          "data_ref": null
+        },
+        {
+          "position": 9,
+          "nom_dans_fichier": "Nom sous-groupe",
+          "data_ref": null
+        },
+        {
+          "position": 13,
+          "nom_dans_fichier": "Periode",
+          "data_ref": "PERIODE_MOIS"
+        },
+        {
+          "position": 15,
+          "nom_dans_fichier": "Type",
+          "data_ref": null
+        },
+        {
+          "position": 16,
+          "nom_dans_fichier": "Code agence",
+          "data_ref": "CODE_AGENCE"
         },
         {
           "position": 17,
@@ -1106,11 +1330,88 @@
           "data_ref": "IBAN"
         },
         {
+          "position": 19,
+          "nom_dans_fichier": "Etat actif",
+          "data_ref": null
+        },
+        {
+          "position": 24,
+          "nom_dans_fichier": "Pays",
+          "data_ref": null
+        },
+        {
+          "position": 36,
+          "nom_dans_fichier": "Adhesion Procurement",
+          "data_ref": null
+        },
+        {
+          "position": 37,
+          "nom_dans_fichier": "Plafond Procurement",
+          "data_ref": "PLAFOND_PRODUIT"
+        },
+        {
+          "position": 39,
+          "nom_dans_fichier": "Adhesion Virtuelle",
+          "data_ref": null
+        },
+        {
+          "position": 40,
+          "nom_dans_fichier": "Plafond Virtuelle",
+          "data_ref": "PLAFOND_PRODUIT"
+        },
+        {
+          "position": 41,
+          "nom_dans_fichier": "Adhesion Voyage",
+          "data_ref": null
+        },
+        {
+          "position": 42,
+          "nom_dans_fichier": "Plafond Voyage",
+          "data_ref": "PLAFOND_PRODUIT"
+        },
+        {
+          "position": 43,
+          "nom_dans_fichier": "Adhesion Achat",
+          "data_ref": null
+        },
+        {
+          "position": 44,
+          "nom_dans_fichier": "Plafond Achat",
+          "data_ref": "PLAFOND_PRODUIT"
+        },
+        {
+          "position": 46,
+          "nom_dans_fichier": "Adhesion CVV",
+          "data_ref": null
+        },
+        {
+          "position": 47,
+          "nom_dans_fichier": "Plafond CVV",
+          "data_ref": "PLAFOND_PRODUIT"
+        },
+        {
+          "position": 63,
+          "nom_dans_fichier": "Differe (O/N)",
+          "data_ref": null
+        },
+        {
+          "position": 64,
+          "nom_dans_fichier": "Differe (jours)",
+          "data_ref": null
+        },
+        {
           "position": 71,
-          "nom_dans_fichier": "Relation commerciale",
+          "nom_dans_fichier": "Relation commerciale (RC)",
           "data_ref": "ID_RC"
+        },
+        {
+          "position": 72,
+          "nom_dans_fichier": "Date creation",
+          "data_ref": null
         }
       ],
+      "colonnes_min": 72,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_032",
         "BNP_LIV_033"
@@ -1161,6 +1462,8 @@
           "data_ref": "IBAN"
         }
       ],
+      "colonnes_min": 4,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_033",
         "BNP_LIV_034"
@@ -1199,6 +1502,8 @@
           "data_ref": "RMPM"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_033"
       ],
@@ -1372,6 +1677,8 @@
           "data_ref": "KPI_OPERATIONS_MENSUEL"
         }
       ],
+      "colonnes_min": 32,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034",
         "BNP_LIV_035"
@@ -1397,7 +1704,40 @@
       "frequence": "a_remplir",
       "agregateur": null,
       "chemin_local": "",
-      "colonnes": [],
+      "colonnes": [
+        {
+          "position": 1,
+          "nom_dans_fichier": "SOURCE",
+          "data_ref": "SOURCE_FEUILLE"
+        },
+        {
+          "position": 3,
+          "nom_dans_fichier": "PAYS_MONITORING",
+          "data_ref": "PAYS_APPORTEUR"
+        },
+        {
+          "position": 4,
+          "nom_dans_fichier": "PAYS_ONBOARDING",
+          "data_ref": "PAYS_APPORTEUR"
+        },
+        {
+          "position": 11,
+          "nom_dans_fichier": "RC",
+          "data_ref": "ID_RC"
+        },
+        {
+          "position": 12,
+          "nom_dans_fichier": "RP",
+          "data_ref": "ID_RP"
+        },
+        {
+          "position": 15,
+          "nom_dans_fichier": "RMPM",
+          "data_ref": "RMPM"
+        }
+      ],
+      "colonnes_min": 15,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_024"
       ],
@@ -1436,6 +1776,8 @@
           "data_ref": "VALEUR_CORRIGEE"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034",
         "BNP_LIV_035"
@@ -1473,6 +1815,8 @@
           "data_ref": "VALEUR_CORRIGEE"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1509,6 +1853,8 @@
           "data_ref": "VALEUR_CORRIGEE"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1551,6 +1897,8 @@
           "data_ref": "VALEUR_CORRIGEE"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_024",
         "BNP_LIV_035"
@@ -1594,6 +1942,8 @@
           "data_ref": "NB_CARTES"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034",
         "BNP_LIV_035"
@@ -1652,6 +2002,8 @@
           "data_ref": "IBAN"
         }
       ],
+      "colonnes_min": 6,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034",
         "BNP_LIV_035"
@@ -1715,6 +2067,8 @@
           "data_ref": "PNB_TOTAL"
         }
       ],
+      "colonnes_min": 7,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_027"
       ],
@@ -1756,6 +2110,8 @@
           "data_ref": "RCM"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1798,6 +2154,8 @@
           "data_ref": "PAYS_LIBELLE"
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1840,6 +2198,8 @@
           "data_ref": null
         }
       ],
+      "colonnes_min": 3,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1876,6 +2236,8 @@
           "data_ref": "COMMISSIONED_WITH"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034",
         "BNP_LIV_035"
@@ -1923,6 +2285,8 @@
           "data_ref": "OVERRIDE_COUNTRY_VALUE"
         }
       ],
+      "colonnes_min": 4,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],
@@ -1959,6 +2323,8 @@
           "data_ref": "VALEUR_CORRIGEE"
         }
       ],
+      "colonnes_min": 2,
+      "mode_matching": "position",
       "livrables_utilisateurs": [
         "BNP_LIV_034"
       ],

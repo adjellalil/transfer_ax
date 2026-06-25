@@ -207,7 +207,7 @@ MONEXT_POS = {"mois": 1, "rs": 4, "id_rp": 9, "id_rc": 10,
               "depenses": 15, "retraits": 17,
               "pnb_first": 19, "pnb_last": 55, "pnb_excl": 33,
               "pnb_ndf_1": 22, "pnb_ndf_2": 55}
-WL_POS     = {"mois": 2, "id_prog": 4, "produit": 5, "rs": 8, "id_rc": 41}
+WL_POS     = {"mois": 2, "id_prog": 4, "produit": 5, "rs": 8, "id_rc": 40}  # RC en col 40 (col 41 = DIFFERE ; aligne sur le consensus, etait 41)
 WL_PNB_DEF = [30, 31, 32, 33, 34, 35, 36]
 USAGE_POS  = {"id_prog": 2, "produit": 3, "usage": 4}
 
