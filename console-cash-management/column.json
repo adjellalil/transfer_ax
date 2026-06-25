@@ -1,0 +1,336 @@
+{
+  "version": "1.4-draft",
+  "last_updated": "2026-06-24",
+  "auteur": "Ali Djellalil",
+  "objet": "Description des fichiers sources utilisés par les programmes de la Cash Management Console.",
+
+  "conventions": {
+    "owner_par_defaut": "Ali Djellalil",
+    "encoding_note": "Caractères mal encodés (ï¿½) et fautes d'orthographe conservés tels quels.",
+    "champs_a_completer": "Champs 'a_remplir' à compléter ultérieurement.",
+    "nommage_fichiers_agreges": "Format : {NOM_CANONIQUE} - {MOIS_FRANCAIS}_{ANNEE}.",
+    "renommage_a_venir": "Chaque source a un nom_historique et un nom_canonique.",
+    "concept_canonique": "Champ 'concept_canonique' identifie le concept métier indépendamment du nom variable.",
+    "distinction_mensuel_agrege": "Sources mensuelles avec variante agrégée → entrées distinctes (_MENSUEL ou _AGREGE).",
+    "fichiers_override": "Famille 'referentiel_override' : fichiers maintenus à la main qui contiennent des données correctives (pays erronés, noms de produits incohérents, etc.) à appliquer en écrasement sur les données issues des sources. Ces fichiers sont structurellement pauvres mais opérationnellement importants."
+  },
+
+  "concepts_canoniques_referentiels": {
+    "description": "Référentiel des concepts canoniques. Section synthétique — voir v1.3 pour le détail exhaustif.",
+    "identifiants": "identifiant_RP, identifiant_RC, identifiant_RMPM, identifiant_FDC, identifiant_IBP, identifiant_IBPC, business_group_id, type_identifiant, identifiant_polymorphe",
+    "acteurs": "raison_sociale, nom_GA, code_GA, ga_concat_code_nom (concaténation code GA + nom GA), siren, tva_intracommunautaire, code_CAF, nom_CAF, code_siege_DR, nom_siege_DR, nature_juridique_code, nature_juridique_libelle, nature_relation_client, responsable_commercial, commercial_sales, proprietaire_compte_parent_GA, compte_parent_nom, type_enregistrement_compte, nom_mandataire, nom_RP_principal, mail_RP_principal, nb_RP_secondaires, statut_client, entite_juridique_cliente, type_actionnaire, RCM",
+    "comptes": "IBAN, RIB, numero_compte_format_RIB, shadow_account_nbr, code_BIC, account_number",
+    "geographie_structures_BNP": "pays_code, pays_libelle, pays_libelle_court, region, branch_code, code_agence, agence_numero, agence_nom, pays_apporteur_affaire, pays_kick_back, adresse_ligne_1/2/3/4, code_postal_ville, toutes les structures BNP (AG, ENT, GRP, REG, RES, HUB, TYPO)",
+    "classification": "marche, segment_interne, gestion_indirecte, produit_type, produit_nom_origine, produit_usage_normalise, source_marche, client_non_europeen, langue_programme, onboarding_for_cards, source_feuille (MONITORING vs ONBOARDING)",
+    "wl_specifique": "wl_groupe, wl_sous_groupe, programme_id, programme_nom, libelle_programme, numero_marche, id_ligne_transfert, embossage, type_programme, periode_mois, niveau_agregation, code_worldline",
+    "monetaire": "devise, taux_change_vers_euros, plafond, plafond_mensuel_carte, plafond_produit, delai_differe_paiement, delai_differe_retrait, paiement_differe_indicateur, nb_jours_differe, marge_differe_pct, taux_differe, kick_back_indicateur, kick_back_taux, montant_intellilink, exposition_totale_EUR, utilisation_trimestrielle_volume, utilisation_trimestrielle_limite",
+    "kpi_operations": "kpi_operations_janvier à kpi_operations_decembre (12 colonnes mensuelles d'opérations comptabilisées)",
+    "temporel": "mois_AAAAMM, mois_MM_AAAA, mois_libelle_dynamique, date_taux, date_initiale_contrat, date_note_contentieux, date_creation_programme, date_demande, date_implementation",
+    "types_cartes": "type_carte (Corporate, Procurement, Voyage, Virtuelle...)",
+    "override_specifique": "override_country_value, override_payee_payer, debit_alias, commissioned_processing, commissioned_with"
+  },
+
+  "livrables_referentiel": {
+    "BNP_LIV_003": "Agrégation Worldline (PRGM_MENSUEL → PRGM_AGREGE)",
+    "BNP_LIV_004": "Agrégation MONEXT",
+    "BNP_LIV_018": "Analyse revenus cartes corporate MONEXT + CPC Worldline",
+    "BNP_LIV_019": "Variante/extension LIV_018",
+    "BNP_LIV_032": "Utilise PRGM_AGREGE, FICHIER_ACHETEUR, PARC_CLIENT_AJUSTE, IBAN_GROUP, IBAN_SINGLETON, REFERENTIEL_CLIENTS_MULTICLE",
+    "BNP_LIV_034": "Analyse des revenus des clients CIB onboardés par BCEF. Source pivot : MONITORING_ONBOARDING_CIB. Utilise aussi de nombreux fichiers d'override pour corriger les données du fichier monitoring (qui est maintenu manuellement, donc plein de fautes)."
+  },
+
+  "todos": [
+    "VÉRIFIER exemples FICHIER_ACHETEUR col 16-35 (décalage)",
+    "Fournir le tableau colonnes du PARC_CLIENT_AJUSTE",
+    "CLARIFIER les fichiers d'override LIV_034 : OVERRIDE_PAYEE_PAYER, DEBIT_REVENUE_MAPPING, COMMISSIONED_PROCESSING, TYPE_ACTIONNAIRE (sémantique exacte, comment chacun est utilisé dans le programme)",
+    "Compléter owners restants",
+    "Compléter colonnes OPTIFLUX",
+    "Documenter colonnes 9 fichiers Worldline non-PRGM",
+    "Clarifier différence MATCHING_CLIENT_LUDOVIC_1 vs _2",
+    "Distinguer RIB et IBAN (FR76)",
+    "Confirmer les livrables_utilisateurs IBAN_GROUP / IBAN_SINGLETON (probablement plus large)",
+    "Renommage intelligent",
+    "Vérifier la sémantique exacte de chaque colonne de MONITORING_ONBOARDING_CIB (Ali dit ne pas se prendre la tête mais certaines colonnes ont l'air mal nommées dans la source : 'Pays apporteur d'affaire' apparaît 2 fois en positions 3 et 4, etc.)"
+  ],
+
+  "sources": {
+
+    "_DEJA_DOCUMENTES_": {
+      "note": "Les sources suivantes restent inchangées par rapport aux versions précédentes. Voir v1.2/v1.3 pour le détail des colonnes. Seuls les livrables_utilisateurs sont mis à jour ici.",
+      "sources_inchangees": [
+        "PRGM_AGREGE",
+        "PRGM_MENSUEL",
+        "WL_FRAM", "WL_FRSM", "WL_GEOM", "WL_GLOM", "WL_PRDM", "WL_STAM_GLOB", "WL_STAM_PROG", "WL_STAM_UTIL", "WL_TITU",
+        "MONEXT_PECC_4871", "MONEXT_PECC_5212_MENSUEL", "MONEXT_PECC_5212_AGREGE", "MONEXT_FLUX", "MONEXT_STOCK",
+        "REFERENTIEL_CLIENTS_MULTICLE",
+        "MATCHING_IDENTIFIANT_MARCHE",
+        "PARC_CLIENT",
+        "PARC_CLIENT_AJUSTE",
+        "OPTIFLUX",
+        "GA_GESTION_DIRECTE",
+        "DEVISES_TAUX",
+        "MATCHING_PRODUIT_USAGE",
+        "CODE_AGENCE_RETAIL",
+        "MATCHING_CLIENT_LUDOVIC_1", "MATCHING_CLIENT_LUDOVIC_2",
+        "SEGMENT_AGENCE",
+        "EXTRACTION_CM360",
+        "FICHIER_ACHETEUR",
+        "IBAN_GROUP",
+        "IBAN_SINGLETON"
+      ]
+    },
+
+    "PRGM_AGREGE_livrables_users":       {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_032", "BNP_LIV_034"]},
+    "MONEXT_PECC_5212_AGREGE_livrables_users": {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_034"]},
+    "REFERENTIEL_CLIENTS_MULTICLE_livrables_users": {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_032", "BNP_LIV_034"]},
+    "MATCHING_IDENTIFIANT_MARCHE_livrables_users": {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_034"]},
+    "OPTIFLUX_livrables_users":          {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_034"]},
+    "CODE_AGENCE_RETAIL_livrables_users":{"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_034"]},
+    "DEVISES_TAUX_livrables_users":      {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_034"]},
+    "IBAN_GROUP_livrables_users":        {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_032", "BNP_LIV_034"]},
+    "IBAN_SINGLETON_livrables_users":    {"livrables_utilisateurs": ["BNP_LIV_018", "BNP_LIV_032", "BNP_LIV_034"]},
+
+    "MONITORING_ONBOARDING_CIB": {
+      "nom_canonique": "MONITORING_ONBOARDING_CIB",
+      "nom_historique": "Fichier monitoring onboarding CIB",
+      "famille": "Référentiel agrégé interne",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "owner": "Ali Djellalil (agrégateur) — XLSX source maintenu par une autre personne (a_remplir)",
+      "type": "agrégé",
+      "plateforme_origine": "BNP — fichier interne agrégé",
+      "frequence": "mensuelle (programme d'agrégation relancé périodiquement)",
+      "format_recu": "XLSX (source multi-feuilles) → consolidé en interne",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034", "BNP_LIV_035"],
+      "notes": "ATTENTION : fichier maintenu manuellement par une personne externe → fautes d'orthographe, incohérences, formats changeants. Ce fichier est la PRINCIPALE source de bruit, ce qui justifie les nombreux fichiers d'override associés au LIV_034. Le XLSX source n'est PAS conservé dans le pipeline (Ali ne l'a pas physiquement). Particularités à noter : colonne 5 (GA) est une concaténation 'code GA - nom GA'. Colonnes 3 et 4 portent le même nom 'IDENTIFICATION CLIENT - Pays apporteur d'affaire' (probable erreur de la personne qui maintient le fichier — à conserver tel quel).",
+      "colonnes": [
+        {"num": 1,  "nom_dans_fichier": "SOURCE",                                                "concept_canonique": "source_feuille",                  "exemple_1": "MONITORING",            "exemple_2": "MONITORING",         "exemple_3": "MONITORING",                            "description": "Feuille d'origine de la ligne dans le XLSX source : MONITORING ou ONBOARDING", "format": "string"},
+        {"num": 2,  "nom_dans_fichier": "Onboarding For cards",                                 "concept_canonique": "onboarding_for_cards",            "exemple_1": "NO",                    "exemple_2": "NO",                 "exemple_3": "NO",                                    "description": "a_remplir", "format": "a_remplir"},
+        {"num": 3,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Pays apporteur d'affaire",     "concept_canonique": "pays_apporteur_affaire",          "exemple_1": "ROYAUME-UNI",           "exemple_2": "ROYAUME-UNI",        "exemple_3": "FRANCECB",                              "description": "Pays apporteur d'affaire", "format": "a_remplir"},
+        {"num": 4,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Pays apporteur d'affaire",     "concept_canonique": "pays_apporteur_affaire_doublon",  "exemple_1": "N/A",                   "exemple_2": "N/A",                "exemple_3": "N/A",                                   "description": "DOUBLON DU NOM DE COL 3 (erreur dans le fichier source, conservée). Valeurs différentes de la col 3.", "format": "a_remplir"},
+        {"num": 5,  "nom_dans_fichier": "IDENTIFICATION CLIENT - GA",                           "concept_canonique": "ga_concat_code_nom",              "exemple_1": "66922 - VALUE RETAIL PLC","exemple_2": "66922 - VALUE RETAIL","exemple_3": "153 - TOTALENERGIES",                  "description": "CONCATÉNATION 'code GA - nom GA'. À splitter dans le programme.", "format": "string"},
+        {"num": 6,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Statut",                       "concept_canonique": "statut_client",                   "exemple_1": "Confirmé",              "exemple_2": "Confirmé",           "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 7,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Entité juridique cliente",     "concept_canonique": "entite_juridique_cliente",        "exemple_1": "Value Retail Managment Germany GY","exemple_2": "Value Retail European H","exemple_3": "Automotive Cells Company Deutschland","description": "Raison sociale étendue de l'entité juridique cliente", "format": "a_remplir"},
+        {"num": 8,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Col_G",                        "concept_canonique": "monitoring_col_g",                "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "Colonne G non nommée explicitement. Vide dans les exemples. À clarifier.", "format": "a_remplir"},
+        {"num": 9,  "nom_dans_fichier": "IDENTIFICATION CLIENT - Col_F",                        "concept_canonique": "monitoring_col_f",                "exemple_1": "N/A",                   "exemple_2": "N/A",                "exemple_3": "N/A",                                   "description": "Colonne F non nommée explicitement. À clarifier.", "format": "a_remplir"},
+        {"num": 10, "nom_dans_fichier": "IDENTIFICATION CLIENT - Commercial",                   "concept_canonique": "responsable_commercial",          "exemple_1": "Corine Spier",          "exemple_2": "Corine Spier",       "exemple_3": "Fabien Lemeunier",                      "description": "Nom du commercial BNP", "format": "a_remplir"},
+        {"num": 11, "nom_dans_fichier": "IDENTIFICATION CLIENT - N° Relation commerciale",      "concept_canonique": "identifiant_RC",                  "exemple_1": "02511770435482310",     "exemple_2": "02511670435135123",  "exemple_3": "01328620435283858",                     "description": "Numéro Relation Commerciale = identifiant_RC", "format": "a_remplir"},
+        {"num": 12, "nom_dans_fichier": "IDENTIFICATION CLIENT - ID unique",                    "concept_canonique": "identifiant_RP",                  "exemple_1": "03970012859500000",     "exemple_2": "03890012708400000",  "exemple_3": "03700027676000000",                     "description": "ID unique = identifiant_RP", "format": "a_remplir"},
+        {"num": 13, "nom_dans_fichier": "IDENTIFICATION CLIENT - Date Demande",                 "concept_canonique": "date_demande",                    "exemple_1": "03/10/2023 00:00",      "exemple_2": "03/10/2023 00:00",   "exemple_3": "########",                              "description": "Date de la demande d'onboarding", "format": "a_remplir"},
+        {"num": 14, "nom_dans_fichier": "IDENTIFICATION CLIENT - Date Implem.",                 "concept_canonique": "date_implementation",             "exemple_1": "On-going",              "exemple_2": "Oui Jan 2023",       "exemple_3": "On-going",                              "description": "Date implémentation — format hétérogène (texte libre)", "format": "string_libre"},
+        {"num": 15, "nom_dans_fichier": "IDENTIFICATION CLIENT - RMPM EJ Cliente",              "concept_canonique": "identifiant_RMPM",                "exemple_1": "4ABG297680",            "exemple_2": "4AAU964698",         "exemple_3": "4ABR365785",                            "description": "RMPM de l'entité juridique cliente", "format": "a_remplir"},
+        {"num": 16, "nom_dans_fichier": "TYPE OF CARDS",                                        "concept_canonique": "type_carte",                      "exemple_1": "Corporate",             "exemple_2": "Corporate",          "exemple_3": "Voyage",                                "description": "Type de carte (Corporate, Procurement, Voyage, Virtuelle...)", "format": "a_remplir"},
+        {"num": 17, "nom_dans_fichier": "PARAMETRES - Devise",                                  "concept_canonique": "devise",                          "exemple_1": "+",                     "exemple_2": "",                   "exemple_3": "",                                      "description": "VALEURS EXEMPLES POTENTIELLEMENT DÉCALÉES à partir d'ici — à vérifier", "format": "a_remplir"},
+        {"num": 18, "nom_dans_fichier": "PARAMETRES - Différé unique",                          "concept_canonique": "delai_differe_paiement",          "exemple_1": "Proc",                  "exemple_2": "",                   "exemple_3": "EUR",                                   "description": "POTENTIELLEMENT DÉCALÉ", "format": "a_remplir"},
+        {"num": 19, "nom_dans_fichier": "PARAMETRES - Période Carte CPC",                       "concept_canonique": "periode_carte_cpc",               "exemple_1": "EUR",                   "exemple_2": "30",                 "exemple_3": "60",                                    "description": "POTENTIELLEMENT DÉCALÉ", "format": "a_remplir"},
+        {"num": 20, "nom_dans_fichier": "CORPORATE - Plafond mensuel Carte",                    "concept_canonique": "plafond_mensuel_carte_corporate", "exemple_1": "Mensuelle",             "exemple_2": "60",                 "exemple_3": "Annuelle",                              "description": "POTENTIELLEMENT DÉCALÉ", "format": "a_remplir"},
+        {"num": 21, "nom_dans_fichier": "CORPORATE - Nbr",                                      "concept_canonique": "corporate_nb",                    "exemple_1": "5000",                  "exemple_2": "5000",               "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 22, "nom_dans_fichier": "CORPORATE - Exposition",                               "concept_canonique": "corporate_exposition",            "exemple_1": "9",                     "exemple_2": "3",                  "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 23, "nom_dans_fichier": "PROC - Plafond produit",                               "concept_canonique": "plafond_produit_procurement",     "exemple_1": "135000",                "exemple_2": "45000",              "exemple_3": "0",                                     "description": "a_remplir", "format": "a_remplir"},
+        {"num": 24, "nom_dans_fichier": "PROC - Nbr",                                           "concept_canonique": "procurement_nb",                  "exemple_1": "40000",                 "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 25, "nom_dans_fichier": "PROC - Exposition",                                    "concept_canonique": "procurement_exposition",          "exemple_1": "1",                     "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 26, "nom_dans_fichier": "VIRT. - Plafond produit devise",                       "concept_canonique": "plafond_produit_virtuelle",       "exemple_1": "120000",                "exemple_2": "0",                  "exemple_3": "0",                                     "description": "a_remplir", "format": "a_remplir"},
+        {"num": 27, "nom_dans_fichier": "VIRT. - Nbr",                                          "concept_canonique": "virtuelle_nb",                    "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 28, "nom_dans_fichier": "VIRT. - Exposition",                                   "concept_canonique": "virtuelle_exposition",            "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 29, "nom_dans_fichier": "VOY. - Plafond produit devise",                        "concept_canonique": "plafond_produit_voyage",          "exemple_1": "0",                     "exemple_2": "0",                  "exemple_3": "0",                                     "description": "a_remplir", "format": "a_remplir"},
+        {"num": 30, "nom_dans_fichier": "VOY. - Nbr",                                           "concept_canonique": "voyage_nb",                       "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "2000000",                               "description": "a_remplir", "format": "a_remplir"},
+        {"num": 31, "nom_dans_fichier": "VOY. - Exposition",                                    "concept_canonique": "voyage_exposition",               "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "1",                                     "description": "a_remplir", "format": "a_remplir"},
+        {"num": 32, "nom_dans_fichier": "EXPOSITION - Total exposition (EUR)",                  "concept_canonique": "exposition_totale_EUR",           "exemple_1": "0",                     "exemple_2": "0",                  "exemple_3": "500000",                                "description": "Total exposition en euros", "format": "a_remplir"},
+        {"num": 33, "nom_dans_fichier": "EXPOSITION - N",                                       "concept_canonique": "exposition_n",                    "exemple_1": "255000",                "exemple_2": "45000",              "exemple_3": "500000",                                "description": "a_remplir", "format": "a_remplir"},
+        {"num": 34, "nom_dans_fichier": "UTILISATION TRIMEST. - Volume (EUR)",                  "concept_canonique": "utilisation_trimestrielle_volume","exemple_1": "0.51",                  "exemple_2": "0.09",               "exemple_3": "1",                                     "description": "Volume d'utilisation trimestriel en euros", "format": "a_remplir"},
+        {"num": 35, "nom_dans_fichier": "UTILISATION TRIMEST. - Limite",                        "concept_canonique": "utilisation_trimestrielle_limite","exemple_1": "16203.9",               "exemple_2": "11299.02",           "exemple_3": "0",                                     "description": "Limite d'utilisation trimestrielle", "format": "a_remplir"},
+        {"num": 36, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Janvier",      "concept_canonique": "kpi_operations_janvier",          "exemple_1": "0.06354470588235293",   "exemple_2": "0.25108933333333333","exemple_3": "0",                                     "description": "Opérations comptabilisées de janvier", "format": "a_remplir"},
+        {"num": 37, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Février",      "concept_canonique": "kpi_operations_fevrier",          "exemple_1": "1160.42",               "exemple_2": "6353.87",            "exemple_3": "0",                                     "description": "Opérations comptabilisées de février", "format": "a_remplir"},
+        {"num": 38, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Mars",         "concept_canonique": "kpi_operations_mars",             "exemple_1": "0",                     "exemple_2": "5848.37",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 39, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Avril",        "concept_canonique": "kpi_operations_avril",            "exemple_1": "9960.5",                "exemple_2": "3351.37",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 40, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Mai",          "concept_canonique": "kpi_operations_mai",              "exemple_1": "3717.99",               "exemple_2": "3301.21",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 41, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Juin",         "concept_canonique": "kpi_operations_juin",             "exemple_1": "2525.41",               "exemple_2": "2523.66",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 42, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Juillet",      "concept_canonique": "kpi_operations_juillet",          "exemple_1": "",                      "exemple_2": "5474.15",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 43, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Août",         "concept_canonique": "kpi_operations_aout",             "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 44, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Septembre",    "concept_canonique": "kpi_operations_septembre",        "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 45, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Octobre",      "concept_canonique": "kpi_operations_octobre",          "exemple_1": "",                      "exemple_2": "",                   "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 46, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Novembre",     "concept_canonique": "kpi_operations_novembre",         "exemple_1": "279.7",                 "exemple_2": "2337.14",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"},
+        {"num": 47, "nom_dans_fichier": "OPERATIONS COMPTABILISEES (EN DEVISE) - Décembre",     "concept_canonique": "kpi_operations_decembre",         "exemple_1": "1373.33",               "exemple_2": "1816.13",            "exemple_3": "",                                      "description": "a_remplir", "format": "a_remplir"}
+      ]
+    },
+
+    "OVERRIDE_COUNTRY": {
+      "nom_canonique": "OVERRIDE_COUNTRY",
+      "nom_historique": "Override Country",
+      "famille": "Référentiel override",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "owner": "Ali Djellalil",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "Note Ali : 'si jamais un client apparaît dans ce fichier, ça permet de modifier à la main le pays du client et ça va écraser une valeur'. Sémantique exacte à reconfirmer dans le code.",
+      "colonnes_partielles": true,
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Type identifiant",  "concept_canonique": "type_identifiant",         "exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Type d'identifiant (RMPM, RC, RP...)", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Valeur identifiant","concept_canonique": "identifiant_polymorphe",   "exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Valeur de l'identifiant", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "Nom client",        "concept_canonique": "raison_sociale",           "exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Nom du client (pour lisibilité)", "format": "a_remplir"},
+        {"num": 4, "nom_dans_fichier": "Pays override",     "concept_canonique": "override_country_value",   "exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Valeur de pays à appliquer en écrasement", "format": "a_remplir"}
+      ]
+    },
+
+    "BEJO_NB_CARTES": {
+      "nom_canonique": "BEJO_NB_CARTES",
+      "nom_historique": "Fichier BEJO nombre de cartes",
+      "famille": "Référentiel override",
+      "description": "Fichier d'override spécifique au client BEJO. Permet d'écraser le nombre de cartes par entité juridique du groupe BEJO. Cas particulier maintenu à la main.",
+      "owner": "Ali Djellalil",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "Note Ali : 'on est vraiment dans du détail, c'est nul de devoir modifier ce type d'information avec des fichiers annexes mais c'est comme ça'. Le nom de la colonne 1 dans le fichier est 'Nombre de Subsidiary' mais contient en réalité le nom de l'entité juridique (incohérence de nommage à conserver).",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Nombre de Subsidiary", "concept_canonique": "raison_sociale",         "exemple_1": "BEJOBENE LUX B V", "exemple_2": "BEJO DANDENBERG S.L.U", "exemple_3": "Ben Samen", "description": "MAL NOMMÉ — contient en réalité le nom de l'entité juridique. Conservé tel quel.", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "RMPM",                 "concept_canonique": "identifiant_RMPM",       "exemple_1": "4ABJV450629",     "exemple_2": "4ABAK5092",            "exemple_3": "4ABNSTS",   "description": "RMPM de l'entité", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "Nombre de Carte",      "concept_canonique": "kpi_nb_cartes_override", "exemple_1": "24",              "exemple_2": "28",                   "exemple_3": "5",         "description": "Nombre de cartes à écraser", "format": "a_remplir"}
+      ]
+    },
+
+    "BEJO_DETAIL": {
+      "nom_canonique": "BEJO_DETAIL",
+      "nom_historique": "Fichier détail entités BEJO",
+      "famille": "Référentiel override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "owner": "Ali Djellalil",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "Ce tableau a été donné deux fois par Ali (probable doublon dans son fichier source). La sémantique exacte du 'Code' (col 3) est à confirmer — probablement un code Worldline interne au client.",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Nom Entité juridique","concept_canonique": "raison_sociale",         "exemple_1": "BEJOBENE LUX BV",            "exemple_2": "BEJOBENLUX BV",            "exemple_3": "[illisible]", "description": "Nom entité juridique", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "RMPM",                "concept_canonique": "identifiant_RMPM",       "exemple_1": "4ABJV450629",                "exemple_2": "4ABAX5092",                "exemple_3": "[illisible]", "description": "RMPM", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "Code",                "concept_canonique": "code_worldline",         "exemple_1": "3.BEJELUX LOCAL TRAVELLER C","exemple_2": "3.BEJELUX STANDARD COMPANY","exemple_3": "[illisible]", "description": "Code probablement Worldline — à confirmer", "format": "a_remplir"},
+        {"num": 4, "nom_dans_fichier": "Company",             "concept_canonique": "company_name",           "exemple_1": "BEJELUX LOCAL TRAVELLER",    "exemple_2": "BEJELUX STANDARD",         "exemple_3": "[illisible]", "description": "Nom de société côté Worldline", "format": "a_remplir"},
+        {"num": 5, "nom_dans_fichier": "ID_RP",               "concept_canonique": "identifiant_RP",         "exemple_1": "3,3E+15",                    "exemple_2": "[illisible]",              "exemple_3": "[illisible]", "description": "Identifiant RP", "format": "a_remplir"},
+        {"num": 6, "nom_dans_fichier": "IBAN",                "concept_canonique": "IBAN",                   "exemple_1": "NL86BFFR0221[illisible]",    "exemple_2": "NL23ONPN[illisible]",      "exemple_3": "[illisible]", "description": "IBAN (valeurs tronquées dans l'extraction)", "format": "a_remplir"}
+      ]
+    },
+
+    "TYPE_ACTIONNAIRE": {
+      "nom_canonique": "TYPE_ACTIONNAIRE",
+      "nom_historique": "Fichier type actionnaire / RCM",
+      "famille": "Référentiel override",
+      "description": "Fichier dont la sémantique est partiellement claire. Contient un type d'actionnaire, un marché et un RCM (Relation Commerciale ?). À clarifier par Ali ou via lecture du code du LIV_034.",
+      "owner": "a_remplir",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "SÉMANTIQUE À CLARIFIER. Colonne 2 'Market' illisible dans l'extraction. RCM = Relation Commerciale (probablement raison sociale au sens commercial).",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Type Actionnaire", "concept_canonique": "type_actionnaire", "exemple_1": "RHRH",                       "exemple_2": "RHRH",                        "exemple_3": "RHRH",        "description": "Type d'actionnaire — sémantique à clarifier", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Market",           "concept_canonique": "marche",           "exemple_1": "[illisible]",                "exemple_2": "[illisible]",                 "exemple_3": "[illisible]", "description": "Marché — valeurs non lues dans l'extraction", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "RCM",              "concept_canonique": "RCM",              "exemple_1": "DENNEHEER & ASSOCIATES",     "exemple_2": "DENNET ERRADOS S.A.R.L.",     "exemple_3": "DENNEHEER",   "description": "RCM = probablement Relation Commerciale / Raison sociale commerciale", "format": "a_remplir"}
+      ]
+    },
+
+    "OVERRIDE_PAYEE_PAYER": {
+      "nom_canonique": "OVERRIDE_PAYEE_PAYER",
+      "nom_historique": "Fichier override Payee/Payer",
+      "famille": "Référentiel override",
+      "description": "Fichier d'override probablement utilisé pour corriger des associations Payee/Payer (donneur d'ordre / bénéficiaire) ou des mappings pays. Sémantique non claire dans les extractions fournies.",
+      "owner": "a_remplir",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "SÉMANTIQUE À CLARIFIER. L'extraction donne 3 colonnes (Payee/Payer Marking, PaynDC, et une 3ème non nommée) avec des valeurs qui ressemblent à des associations entreprise → pays/marché.",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "[non nommé]",          "concept_canonique": "raison_sociale_override", "exemple_1": "MULTISENS",     "exemple_2": "NUTRIMANCE",    "exemple_3": "[illisible]", "description": "Probablement nom client", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Payee/Payer Marking",  "concept_canonique": "pays_marking_code",       "exemple_1": "UK",            "exemple_2": "France CB",     "exemple_3": "[illisible]", "description": "Code pays courte forme", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "PaynDC",               "concept_canonique": "pays_libelle_override",   "exemple_1": "ROYAUME-UNI",   "exemple_2": "FRANCE CB",     "exemple_3": "[illisible]", "description": "Pays libellé long override", "format": "a_remplir"}
+      ]
+    },
+
+    "DEBIT_REVENUE_MAPPING": {
+      "nom_canonique": "DEBIT_REVENUE_MAPPING",
+      "nom_historique": "Fichier Débit / Revenue",
+      "famille": "Référentiel override",
+      "description": "Petit tableau de mapping Débit/Revenue. Sémantique non claire dans l'extraction fournie (les exemples mélangent 'Dépense', 'Revenue', 'Prod', 'Procurement'). À clarifier.",
+      "owner": "a_remplir",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "SÉMANTIQUE À CLARIFIER. L'extraction donne 2 colonnes (Débit alias, Montant) mais les valeurs ne semblent pas correspondre aux noms (ex : 'Montant' contient 'Prod' et 'Revenue').",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Débit alias", "concept_canonique": "debit_alias", "exemple_1": "Dépense", "exemple_2": "Revenue", "description": "À clarifier", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Montant",     "concept_canonique": "montant_label","exemple_1": "Prod",   "exemple_2": "Revenue", "description": "À clarifier — valeurs non numériques", "format": "a_remplir"},
+        {"num": 3, "nom_dans_fichier": "[non nommé]", "concept_canonique": "categorie_combinee","exemple_1": "", "exemple_2": "Dépense + Procurement", "description": "Colonne sans nom dans l'extraction", "format": "a_remplir"}
+      ]
+    },
+
+    "COMMISSIONED_PROCESSING": {
+      "nom_canonique": "COMMISSIONED_PROCESSING",
+      "nom_historique": "Fichier Commissioned processing",
+      "famille": "Référentiel override",
+      "description": "Fichier avec 2 colonnes 'Commissioned processing' et 'Commissioned With' contenant des noms (probablement personnes ou entités). Sémantique non claire — peut-être lié à la gestion des commissions versées à CIB (cf. LIV_035).",
+      "owner": "a_remplir",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "SÉMANTIQUE À CLARIFIER. Les deux colonnes contiennent les mêmes valeurs dans les exemples (Conne Stone, Pawm Lanning), à confirmer.",
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Commissioned processing", "concept_canonique": "commissioned_processing","exemple_1": "Conne Stone", "exemple_2": "Pawm Lanning", "description": "À clarifier", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Commissioned With",       "concept_canonique": "commissioned_with",      "exemple_1": "Conne Stone", "exemple_2": "Pawm Lanning", "description": "À clarifier", "format": "a_remplir"}
+      ]
+    },
+
+    "OVERRIDE_PRODUITS": {
+      "nom_canonique": "OVERRIDE_PRODUITS",
+      "nom_historique": "Fichier Original / Nouvelle (override des noms de produits / pays / commerciaux)",
+      "famille": "Référentiel override",
+      "description": "Fichier de normalisation simple à 2 colonnes (Original, Nouvelle). Sert à nettoyer les noms de produits, pays et commerciaux qui arrivent mal orthographiés ou incohérents dans le fichier MONITORING_ONBOARDING_CIB (maintenu manuellement par une autre personne). Une ligne par correspondance valeur erronée → valeur corrigée.",
+      "owner": "Ali Djellalil",
+      "type": "referentiel_override",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "format_recu": "a_remplir",
+      "separateur": ";",
+      "livrables_utilisateurs": ["BNP_LIV_034"],
+      "notes": "Note Ali : 'pas la grande gloire d'utiliser des fichiers comme ça pour faire du machine learning artisanal plutôt que de l'internaliser dans le programme, mais comme les données du MONITORING arrivent à intervalle périodique je peux jamais savoir quelles bêtises seront écrites que je devrai nettoyer'.",
+      "colonnes_partielles": true,
+      "colonnes": [
+        {"num": 1, "nom_dans_fichier": "Original", "concept_canonique": "valeur_originale_erronnee","exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Valeur telle qu'elle apparaît dans MONITORING (souvent mal orthographiée)", "format": "a_remplir"},
+        {"num": 2, "nom_dans_fichier": "Nouvelle", "concept_canonique": "valeur_corrigee",          "exemple_1": "a_remplir", "exemple_2": "a_remplir", "description": "Valeur normalisée à appliquer en écrasement", "format": "a_remplir"}
+      ]
+    }
+
+  },
+
+  "prochaines_etapes": [
+    "1. VÉRIFIER décalage exemples FICHIER_ACHETEUR col 16-35",
+    "2. Fournir colonnes PARC_CLIENT_AJUSTE",
+    "3. CLARIFIER la sémantique exacte des fichiers d'override LIV_034 : TYPE_ACTIONNAIRE, OVERRIDE_PAYEE_PAYER, DEBIT_REVENUE_MAPPING, COMMISSIONED_PROCESSING (probable lecture du code Python du livrable nécessaire)",
+    "4. Vérifier les colonnes 17-20 de MONITORING_ONBOARDING_CIB (extraction possiblement décalée)",
+    "5. Compléter owners restants",
+    "6. Documenter colonnes OPTIFLUX (toujours partiel)",
+    "7. Documenter colonnes 9 fichiers Worldline non-PRGM",
+    "8. Clarifier différence MATCHING_CLIENT_LUDOVIC_1 vs _2",
+    "9. Distinguer RIB et IBAN (FR76)",
+    "10. Renommage intelligent",
+    "11. Continuer avec le LIV_035 (commissions versées à CIB)"
+  ]
+}

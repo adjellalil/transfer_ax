@@ -1,0 +1,1898 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-06-25",
+  "sources": [
+    {
+      "ref": "MONITORING_ONBOARDING_CIB",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "type": "agrégé",
+      "format_original": "XLSX (source multi-feuilles) → consolidé en interne",
+      "format_travail": "XLSX (source multi-feuilles) → consolidé en interne",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ],
+      "status": "",
+      "nom_canonique": "MONITORING_ONBOARDING_CIB",
+      "nom_historique": "Fichier monitoring onboarding CIB",
+      "owner": "Ali Djellalil (agrégateur) — XLSX source maintenu par une autre personne (a_remplir)",
+      "notes": "ATTENTION : fichier maintenu manuellement par une personne externe → fautes d'orthographe, incohérences, formats changeants. Ce fichier est la PRINCIPALE source de bruit, ce qui justifie les nombreux fichiers d'override associés au LIV_034. Le XLSX source n'est PAS conservé dans le pipeline (Ali ne l'a pas physiquement). Particularités à noter : colonne 5 (GA) est une concaténation 'code GA - nom GA'. Colonnes 3 et 4 portent le même nom 'IDENTIFICATION CLIENT - Pays apporteur d'affaire' (probable erreur de la personne qui maintient le fichier — à conserver tel quel).",
+      "plateforme_origine": "BNP — fichier interne agrégé",
+      "frequence": "mensuelle (programme d'agrégation relancé périodiquement)",
+      "separateur": ";"
+    },
+    {
+      "ref": "OVERRIDE_COUNTRY",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "OVERRIDE_COUNTRY",
+      "nom_historique": "Override Country",
+      "owner": "Ali Djellalil",
+      "notes": "Note Ali : 'si jamais un client apparaît dans ce fichier, ça permet de modifier à la main le pays du client et ça va écraser une valeur'. Sémantique exacte à reconfirmer dans le code.",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "BEJO_NB_CARTES",
+      "description": "Fichier d'override spécifique au client BEJO. Permet d'écraser le nombre de cartes par entité juridique du groupe BEJO. Cas particulier maintenu à la main.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "BEJO_NB_CARTES",
+      "nom_historique": "Fichier BEJO nombre de cartes",
+      "owner": "Ali Djellalil",
+      "notes": "Note Ali : 'on est vraiment dans du détail, c'est nul de devoir modifier ce type d'information avec des fichiers annexes mais c'est comme ça'. Le nom de la colonne 1 dans le fichier est 'Nombre de Subsidiary' mais contient en réalité le nom de l'entité juridique (incohérence de nommage à conserver).",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "BEJO_DETAIL",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "BEJO_DETAIL",
+      "nom_historique": "Fichier détail entités BEJO",
+      "owner": "Ali Djellalil",
+      "notes": "Ce tableau a été donné deux fois par Ali (probable doublon dans son fichier source). La sémantique exacte du 'Code' (col 3) est à confirmer — probablement un code Worldline interne au client.",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "TYPE_ACTIONNAIRE",
+      "description": "Fichier dont la sémantique est partiellement claire. Contient un type d'actionnaire, un marché et un RCM (Relation Commerciale ?). À clarifier par Ali ou via lecture du code du LIV_034.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "TYPE_ACTIONNAIRE",
+      "nom_historique": "Fichier type actionnaire / RCM",
+      "owner": "a_remplir",
+      "notes": "SÉMANTIQUE À CLARIFIER. Colonne 2 'Market' illisible dans l'extraction. RCM = Relation Commerciale (probablement raison sociale au sens commercial).",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "OVERRIDE_PAYEE_PAYER",
+      "description": "Fichier d'override probablement utilisé pour corriger des associations Payee/Payer (donneur d'ordre / bénéficiaire) ou des mappings pays. Sémantique non claire dans les extractions fournies.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "OVERRIDE_PAYEE_PAYER",
+      "nom_historique": "Fichier override Payee/Payer",
+      "owner": "a_remplir",
+      "notes": "SÉMANTIQUE À CLARIFIER. L'extraction donne 3 colonnes (Payee/Payer Marking, PaynDC, et une 3ème non nommée) avec des valeurs qui ressemblent à des associations entreprise → pays/marché.",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "DEBIT_REVENUE_MAPPING",
+      "description": "Petit tableau de mapping Débit/Revenue. Sémantique non claire dans l'extraction fournie (les exemples mélangent 'Dépense', 'Revenue', 'Prod', 'Procurement'). À clarifier.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "DEBIT_REVENUE_MAPPING",
+      "nom_historique": "Fichier Débit / Revenue",
+      "owner": "a_remplir",
+      "notes": "SÉMANTIQUE À CLARIFIER. L'extraction donne 2 colonnes (Débit alias, Montant) mais les valeurs ne semblent pas correspondre aux noms (ex : 'Montant' contient 'Prod' et 'Revenue').",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "COMMISSIONED_PROCESSING",
+      "description": "Fichier avec 2 colonnes 'Commissioned processing' et 'Commissioned With' contenant des noms (probablement personnes ou entités). Sémantique non claire — peut-être lié à la gestion des commissions versées à CIB (cf. LIV_035).",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "COMMISSIONED_PROCESSING",
+      "nom_historique": "Fichier Commissioned processing",
+      "owner": "a_remplir",
+      "notes": "SÉMANTIQUE À CLARIFIER. Les deux colonnes contiennent les mêmes valeurs dans les exemples (Conne Stone, Pawm Lanning), à confirmer.",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    },
+    {
+      "ref": "OVERRIDE_PRODUITS",
+      "description": "Fichier de normalisation simple à 2 colonnes (Original, Nouvelle). Sert à nettoyer les noms de produits, pays et commerciaux qui arrivent mal orthographiés ou incohérents dans le fichier MONITORING_ONBOARDING_CIB (maintenu manuellement par une autre personne). Une ligne par correspondance valeur erronée → valeur corrigée.",
+      "type": "referentiel_override",
+      "format_original": "a_remplir",
+      "format_travail": "a_remplir",
+      "chemin_travail": "",
+      "chemin_original": "",
+      "agregateur": null,
+      "colonnes_principales": [],
+      "columns": [],
+      "utilisee_dans": [
+        "BNP_LIV_034"
+      ],
+      "status": "",
+      "nom_canonique": "OVERRIDE_PRODUITS",
+      "nom_historique": "Fichier Original / Nouvelle (override des noms de produits / pays / commerciaux)",
+      "owner": "Ali Djellalil",
+      "notes": "Note Ali : 'pas la grande gloire d'utiliser des fichiers comme ça pour faire du machine learning artisanal plutôt que de l'internaliser dans le programme, mais comme les données du MONITORING arrivent à intervalle périodique je peux jamais savoir quelles bêtises seront écrites que je devrai nettoyer'.",
+      "plateforme_origine": "BNP — fichier interne maintenu manuellement",
+      "frequence": "ponctuelle",
+      "separateur": ";"
+    }
+  ],
+  "columns": [
+    {
+      "name": "ID_RC",
+      "kind": "source",
+      "definition": "Identifiant Référentiel Client (RC) Worldline, 17 chiffres.",
+      "format": "string",
+      "exemple": "12345678901234567",
+      "sources": [
+        "PRGM",
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "ID_RP",
+      "kind": "source",
+      "definition": "Identifiant Relation Personne (RP) — clé client Monext.",
+      "format": "string",
+      "exemple": "987654321",
+      "sources": [
+        "MONEXT",
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "CCO_FLUX",
+        "CCO_STOCK"
+      ]
+    },
+    {
+      "name": "ID_PROG",
+      "kind": "source",
+      "definition": "Identifiant programme Worldline.",
+      "format": "string",
+      "exemple": "4821",
+      "sources": [
+        "PRGM",
+        "MATCHING_USAGE",
+        "MC1",
+        "MC2"
+      ]
+    },
+    {
+      "name": "RMPM",
+      "kind": "source",
+      "definition": "Identifiant entité (RMPM) — clé géographie/entité juridique.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "IBAN_ACCOUNT",
+        "REBATE"
+      ]
+    },
+    {
+      "name": "IBAN",
+      "kind": "source",
+      "definition": "Numéro de compte bancaire international.",
+      "format": "string",
+      "exemple": "FR7630003000040000000000000",
+      "sources": [
+        "PRGM",
+        "MONEXT",
+        "PARC_CLIENT",
+        "IBAN_ACCOUNT",
+        "OPTIFLUX"
+      ]
+    },
+    {
+      "name": "RS",
+      "kind": "source",
+      "definition": "Raison Sociale (nom d'entreprise).",
+      "format": "string",
+      "exemple": "ACME FRANCE SAS",
+      "sources": [
+        "PRGM",
+        "MONEXT",
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "OPTIFLUX"
+      ]
+    },
+    {
+      "name": "MOIS",
+      "kind": "source",
+      "definition": "Mois de la donnée.",
+      "format": "string",
+      "exemple": "202501",
+      "sources": [
+        "PRGM",
+        "MONEXT",
+        "CCO_FLUX",
+        "CCO_STOCK",
+        "DEVISES"
+      ]
+    },
+    {
+      "name": "CODE_AGENCE",
+      "kind": "source",
+      "definition": "Code agence BNP.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PRGM",
+        "MONEXT",
+        "PARC_CLIENT",
+        "BPE_RETAIL",
+        "SEG_AGENCE"
+      ]
+    },
+    {
+      "name": "PRODUIT",
+      "kind": "source",
+      "definition": "Produit carte.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PRGM",
+        "MATCHING_USAGE",
+        "MC1",
+        "MC2"
+      ]
+    },
+    {
+      "name": "MONTANT",
+      "kind": "source",
+      "definition": "Montant de transaction (générique).",
+      "format": "decimal",
+      "exemple": "12500.50",
+      "sources": [
+        "PRGM",
+        "MONEXT",
+        "CCO_FLUX",
+        "REBATE"
+      ]
+    },
+    {
+      "name": "NB_CARTES",
+      "kind": "source",
+      "definition": "Nombre de cartes.",
+      "format": "integer",
+      "exemple": "120",
+      "sources": [
+        "PRGM",
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "DEVISE",
+      "kind": "source",
+      "definition": "Code devise (ISO 3 lettres).",
+      "format": "string",
+      "exemple": "EUR",
+      "sources": [
+        "PRGM",
+        "REFERENTIEL_CLIENT",
+        "DEVISES"
+      ]
+    },
+    {
+      "name": "PLAFOND",
+      "kind": "source",
+      "definition": "Plafond de la transaction/programme.",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "sources": [
+        "PRGM"
+      ]
+    },
+    {
+      "name": "PERIODICITE",
+      "kind": "source",
+      "definition": "Périodicité de paiement.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PRGM"
+      ]
+    },
+    {
+      "name": "DIFFERE",
+      "kind": "source",
+      "definition": "Indicateur/flag de différé de paiement.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PRGM",
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "SIREN",
+      "kind": "source",
+      "definition": "Numéro SIREN (immatriculation entreprise).",
+      "format": "string",
+      "exemple": "123456789",
+      "sources": [
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT"
+      ]
+    },
+    {
+      "name": "SEGMENT",
+      "kind": "source",
+      "definition": "Segment client (ENT/BPE et sous-segments).",
+      "format": "string",
+      "exemple": "ENT",
+      "sources": [
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "IDENTIFIANT_SEGMENT"
+      ]
+    },
+    {
+      "name": "CATEGORIE",
+      "kind": "source",
+      "definition": "Catégorie client (ENTREPRISE/BPE).",
+      "format": "string",
+      "exemple": "ENTREPRISE",
+      "sources": [
+        "REFERENTIEL_CLIENT"
+      ]
+    },
+    {
+      "name": "GROUPE_AFFAIRES",
+      "kind": "source",
+      "definition": "Groupe d'affaires (unité d'organisation).",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "DEPENSES",
+      "kind": "source",
+      "definition": "Dépenses/achats carte.",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "sources": [
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "RETRAITS",
+      "kind": "source",
+      "definition": "Retraits espèces carte.",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "sources": [
+        "MONEXT"
+      ]
+    },
+    {
+      "name": "NOM_GA",
+      "kind": "source",
+      "definition": "Nom du gestionnaire/agence (GA).",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "PARC_CLIENT",
+        "REFERENTIEL_CLIENT",
+        "IBAN_ACCOUNT"
+      ]
+    },
+    {
+      "name": "NOM_ENTITE",
+      "kind": "source",
+      "definition": "Nom de l'entité juridique.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "sources": [
+        "IBAN_ACCOUNT"
+      ]
+    },
+    {
+      "name": "TAUX",
+      "kind": "source",
+      "definition": "Taux de change vers EUR.",
+      "format": "decimal",
+      "exemple": "1.0857",
+      "sources": [
+        "DEVISES"
+      ]
+    },
+    {
+      "name": "FLUX",
+      "kind": "calculee",
+      "definition": "Flux total = DEPENSES + RETRAITS.",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "DEPENSES",
+        "RETRAITS"
+      ],
+      "produced_by": [
+        "BNP_LIV_036",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "depenses + retraits"
+    },
+    {
+      "name": "PNB_TOTAL",
+      "kind": "calculee",
+      "definition": "PNB total (somme des composantes PNB).",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "PNB_CORPORATE",
+        "PNB_NDF",
+        "PNB_INTEREST",
+        "PNB_COMMISSION"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_036"
+      ],
+      "formula_description": "Somme d'une plage de colonnes PNB (ex. 19-55 hors colonne 33 pour Monext)."
+    },
+    {
+      "name": "SEGMENT_SOURCE",
+      "kind": "calculee",
+      "definition": "Source ayant déterminé le segment (REF_RC, REF_IBAN, IDSEG_RC, FALLBACK...).",
+      "format": "string",
+      "exemple": "REF_RC",
+      "depends_on": [
+        "SEGMENT"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "Hiérarchie de matching tracée."
+    },
+    {
+      "name": "SEGMENT_RAW",
+      "kind": "calculee",
+      "definition": "Valeur de segment brute avant normalisation.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "SEGMENT"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "a_remplir"
+    },
+    {
+      "name": "GEO_GA",
+      "kind": "calculee",
+      "definition": "Région géographique du GA (France / Hors_France / Pays_non_trouve).",
+      "format": "string",
+      "exemple": "France",
+      "depends_on": [
+        "PAYS_GA"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_024"
+      ],
+      "formula_description": "pays_to_geo(PAYS_GA)"
+    },
+    {
+      "name": "PAYS_GA",
+      "kind": "calculee",
+      "definition": "Pays du GA (via IBAN_ACCOUNT/géo).",
+      "format": "string",
+      "exemple": "FRANCE",
+      "depends_on": [
+        "CODE_GA",
+        "RMPM"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_024"
+      ],
+      "formula_description": "a_remplir"
+    },
+    {
+      "name": "ENTREPRISE",
+      "kind": "calculee",
+      "definition": "Flag classification ENTREPRISE (YES/NO).",
+      "format": "string",
+      "exemple": "YES",
+      "depends_on": [
+        "SEGMENT"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "a_remplir"
+    },
+    {
+      "name": "BPE",
+      "kind": "calculee",
+      "definition": "Flag classification BPE (YES/NO).",
+      "format": "string",
+      "exemple": "NO",
+      "depends_on": [
+        "SEGMENT"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "a_remplir"
+    },
+    {
+      "name": "FOUND_PARC",
+      "kind": "calculee",
+      "definition": "Flag de matching trouvé dans PARC_CLIENT (YES/NO/N/A).",
+      "format": "string",
+      "exemple": "YES",
+      "depends_on": [
+        "ID_RP",
+        "ID_RC"
+      ],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ],
+      "formula_description": "Indicateur de réussite de jointure."
+    },
+    {
+      "name": "DIAGNOSTIC",
+      "kind": "calculee",
+      "definition": "Trace détaillée du chemin de résolution/matching.",
+      "format": "string",
+      "exemple": "a_remplir",
+      "depends_on": [],
+      "produced_by": [
+        "BNP_LIV_018",
+        "BNP_LIV_033",
+        "BNP_LIV_034"
+      ],
+      "formula_description": "Énumération des tentatives."
+    },
+    {
+      "name": "USAGE",
+      "kind": "calculee",
+      "definition": "Usage produit (depuis MATCHING_USAGE, fallback PRODUIT).",
+      "format": "string",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "PRODUIT",
+        "ID_PROG"
+      ],
+      "produced_by": [
+        "BNP_LIV_017",
+        "BNP_LIV_018"
+      ],
+      "formula_description": "map MATCHING_USAGE sinon PRODUIT."
+    },
+    {
+      "name": "FLUX_2025",
+      "kind": "calculee",
+      "definition": "Flux annuel 2025.",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "FLUX",
+        "MOIS"
+      ],
+      "produced_by": [
+        "BNP_LIV_029",
+        "BNP_LIV_030"
+      ],
+      "formula_description": "Somme FLUX sur les mois 2025."
+    },
+    {
+      "name": "ID_RC_FINAL",
+      "kind": "calculee",
+      "definition": "RC résolu final (LIV_033).",
+      "format": "string",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "ID_RC"
+      ],
+      "produced_by": [
+        "BNP_LIV_033"
+      ],
+      "formula_description": "Sortie du pipeline de résolution RC."
+    },
+    {
+      "name": "COMMISSION_TOTAL_HT",
+      "kind": "calculee",
+      "definition": "Commission totale HT (LIV_035).",
+      "format": "decimal",
+      "exemple": "a_remplir",
+      "depends_on": [
+        "MONTANT",
+        "REBATE"
+      ],
+      "produced_by": [
+        "BNP_LIV_035"
+      ],
+      "formula_description": "a_remplir"
+    },
+    {
+      "name": "ALERTE_BAISSE",
+      "kind": "calculee",
+      "definition": "Alerte de baisse de flux (OUI/NON).",
+      "format": "string",
+      "exemple": "OUI",
+      "depends_on": [
+        "FLUX"
+      ],
+      "produced_by": [
+        "BNP_LIV_032"
+      ],
+      "formula_description": "a_remplir"
+    }
+  ],
+  "aggregators": [
+    {
+      "ref": "CCO_FLUX_aggregator",
+      "description": "Agrège les fichiers CCO Flux mensuels (CSV/XLSX onglet REPORT_) d'un dossier en 3 CSV normalisés (NUMBER, AMOUNT, INTERCHANGE).",
+      "input_folder": "sources/originals/CCO_FLUX/",
+      "output_file": "sources/work/CCO_FLUX_consolide.csv",
+      "script": "livrables/BNP_LIV_004/01.N3096.py",
+      "status": "actif"
+    },
+    {
+      "ref": "CCO_STOCK_aggregator",
+      "description": "Agrège les fichiers CCO Stock mensuels (CSV/XLSX onglet REPORT_) en 1 CSV normalisé.",
+      "input_folder": "sources/originals/CCO_STOCK/",
+      "output_file": "sources/work/CCO_STOCK_consolide.csv",
+      "script": "livrables/BNP_LIV_004/02.66Z3Q.py",
+      "status": "actif"
+    },
+    {
+      "ref": "MONEXT_aggregator",
+      "description": "Fusionne les fichiers MONEXT PECC-5212 mensuels en un CSV consolidé multi-année.",
+      "input_folder": "sources/originals/MONEXT/",
+      "output_file": "sources/work/MONEXT_consolide.csv",
+      "script": "livrables/BNP_LIV_004/03.N7M4P.py",
+      "status": "actif"
+    },
+    {
+      "ref": "PRGM_aggregator",
+      "description": "Agrège les fichiers Worldline mensuels en un fichier PRGM consolidé. Correspond au livrable conceptuel BNP_LIV_003 (pas de script pullé).",
+      "input_folder": "sources/originals/PRGM/",
+      "output_file": "sources/work/PRGM_consolide.csv",
+      "script": "aggregators/aggregate_prgm.py",
+      "status": "a_creer"
+    }
+  ],
+  "functions": [
+    {
+      "name": "load_csv_smart",
+      "description": "Lit un CSV en testant plusieurs séparateurs (; , tab) et encodages (utf-8, latin1, cp1252, iso-8859-1). Tout en str, zéros initiaux préservés.",
+      "signature": "load_csv_smart(path: str, nrows: int | None = None) -> pd.DataFrame",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE",
+        "BNP_LIV_017",
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_024",
+        "BNP_LIV_026",
+        "BNP_LIV_029",
+        "BNP_LIV_030",
+        "BNP_LIV_033",
+        "BNP_LIV_034",
+        "BNP_LIV_035",
+        "BNP_LIV_036"
+      ]
+    },
+    {
+      "name": "load_xlsx",
+      "description": "Charge un XLSX en str (préserve les zéros initiaux).",
+      "signature": "load_xlsx(path: str, sheet_name: int | str = 0) -> pd.DataFrame",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE",
+        "BNP_LIV_004",
+        "BNP_LIV_026"
+      ]
+    },
+    {
+      "name": "load_file_auto",
+      "description": "Charge un CSV ou XLSX selon l'extension.",
+      "signature": "load_file_auto(path: str, nrows: int | None = None) -> pd.DataFrame",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE",
+        "BNP_LIV_029"
+      ]
+    },
+    {
+      "name": "protect_long_ids",
+      "description": "Protège les identifiants numériques longs au format =\"VALEUR\" pour préserver les zéros dans Excel.",
+      "signature": "protect_long_ids(series: pd.Series, threshold: int = 15) -> pd.Series",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE",
+        "BNP_LIV_004"
+      ]
+    },
+    {
+      "name": "save_csv_protected",
+      "description": "Écrit un CSV utf-8-sig séparateur ; avec QUOTE_ALL et protection auto des IDs longs.",
+      "signature": "save_csv_protected(df: pd.DataFrame, path: str, protect_ids: bool = True, id_threshold: int = 15) -> None",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE",
+        "BNP_LIV_004"
+      ]
+    },
+    {
+      "name": "get_column_preview",
+      "description": "Renvoie un aperçu (string) des n premières valeurs d'une colonne.",
+      "signature": "get_column_preview(df: pd.DataFrame, col: str, n: int = 3) -> str",
+      "utilisee_dans": [
+        "BNP_LIV_000_CONSOLE"
+      ]
+    },
+    {
+      "name": "clean_id",
+      "description": "Normalise un identifiant numérique (retire espaces, .0, et zéros initiaux selon variante).",
+      "signature": "clean_id(series: pd.Series) -> pd.Series",
+      "utilisee_dans": [
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_026",
+        "BNP_LIV_029",
+        "BNP_LIV_030",
+        "BNP_LIV_033",
+        "BNP_LIV_036"
+      ]
+    },
+    {
+      "name": "norm_rs",
+      "description": "Normalise une Raison Sociale (majuscules, sans accents/ponctuation, espaces compactés) pour le matching.",
+      "signature": "norm_rs(series: pd.Series) -> pd.Series",
+      "utilisee_dans": [
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_026",
+        "BNP_LIV_029",
+        "BNP_LIV_033",
+        "BNP_LIV_036"
+      ]
+    },
+    {
+      "name": "to_float",
+      "description": "Conversion numérique robuste (gère vides, virgule décimale, valeurs invalides -> 0.0).",
+      "signature": "to_float(series: pd.Series) -> pd.Series",
+      "utilisee_dans": [
+        "BNP_LIV_004",
+        "BNP_LIV_018",
+        "BNP_LIV_019",
+        "BNP_LIV_026",
+        "BNP_LIV_029",
+        "BNP_LIV_036"
+      ]
+    },
+    {
+      "name": "parse_mois",
+      "description": "Parse un mois YYYYMM en label lisible (et composantes année/mois).",
+      "signature": "parse_mois(value: str) -> str",
+      "utilisee_dans": [
+        "BNP_LIV_019",
+        "BNP_LIV_029",
+        "BNP_LIV_036"
+      ]
+    },
+    {
+      "name": "pays_to_geo",
+      "description": "Mappe un pays vers une région géo (France / Hors_France / Pays_non_trouve).",
+      "signature": "pays_to_geo(pays: str) -> str",
+      "utilisee_dans": [
+        "BNP_LIV_018",
+        "BNP_LIV_019"
+      ]
+    }
+  ],
+  "source_columns": [
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "SOURCE",
+      "concept_canonique": "source_feuille",
+      "column_description": "Feuille d'origine de la ligne dans le XLSX source : MONITORING ou ONBOARDING",
+      "column_format": "string",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "Onboarding For cards",
+      "concept_canonique": "onboarding_for_cards",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Pays apporteur d'affaire",
+      "concept_canonique": "pays_apporteur_affaire",
+      "column_description": "Pays apporteur d'affaire",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - GA",
+      "concept_canonique": "ga_concat_code_nom",
+      "column_description": "CONCATÉNATION 'code GA - nom GA'. À splitter dans le programme.",
+      "column_format": "string",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Statut",
+      "concept_canonique": "statut_client",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Entité juridique cliente",
+      "concept_canonique": "entite_juridique_cliente",
+      "column_description": "Raison sociale étendue de l'entité juridique cliente",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Col_G",
+      "concept_canonique": "monitoring_col_g",
+      "column_description": "Colonne G non nommée explicitement. Vide dans les exemples. À clarifier.",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Col_F",
+      "concept_canonique": "monitoring_col_f",
+      "column_description": "Colonne F non nommée explicitement. À clarifier.",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Commercial",
+      "concept_canonique": "responsable_commercial",
+      "column_description": "Nom du commercial BNP",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - N° Relation commerciale",
+      "concept_canonique": "identifiant_RC",
+      "column_description": "Numéro Relation Commerciale = identifiant_RC",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - ID unique",
+      "concept_canonique": "identifiant_RP",
+      "column_description": "ID unique = identifiant_RP",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Date Demande",
+      "concept_canonique": "date_demande",
+      "column_description": "Date de la demande d'onboarding",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - Date Implem.",
+      "concept_canonique": "date_implementation",
+      "column_description": "Date implémentation — format hétérogène (texte libre)",
+      "column_format": "string_libre",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "IDENTIFICATION CLIENT - RMPM EJ Cliente",
+      "concept_canonique": "identifiant_RMPM",
+      "column_description": "RMPM de l'entité juridique cliente",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "TYPE OF CARDS",
+      "concept_canonique": "type_carte",
+      "column_description": "Type de carte (Corporate, Procurement, Voyage, Virtuelle...)",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PARAMETRES - Devise",
+      "concept_canonique": "devise",
+      "column_description": "VALEURS EXEMPLES POTENTIELLEMENT DÉCALÉES à partir d'ici — à vérifier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PARAMETRES - Différé unique",
+      "concept_canonique": "delai_differe_paiement",
+      "column_description": "POTENTIELLEMENT DÉCALÉ",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PARAMETRES - Période Carte CPC",
+      "concept_canonique": "periode_carte_cpc",
+      "column_description": "POTENTIELLEMENT DÉCALÉ",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "CORPORATE - Plafond mensuel Carte",
+      "concept_canonique": "plafond_mensuel_carte_corporate",
+      "column_description": "POTENTIELLEMENT DÉCALÉ",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "CORPORATE - Nbr",
+      "concept_canonique": "corporate_nb",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "CORPORATE - Exposition",
+      "concept_canonique": "corporate_exposition",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PROC - Plafond produit",
+      "concept_canonique": "plafond_produit_procurement",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PROC - Nbr",
+      "concept_canonique": "procurement_nb",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "PROC - Exposition",
+      "concept_canonique": "procurement_exposition",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VIRT. - Plafond produit devise",
+      "concept_canonique": "plafond_produit_virtuelle",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VIRT. - Nbr",
+      "concept_canonique": "virtuelle_nb",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VIRT. - Exposition",
+      "concept_canonique": "virtuelle_exposition",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VOY. - Plafond produit devise",
+      "concept_canonique": "plafond_produit_voyage",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VOY. - Nbr",
+      "concept_canonique": "voyage_nb",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "VOY. - Exposition",
+      "concept_canonique": "voyage_exposition",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "EXPOSITION - Total exposition (EUR)",
+      "concept_canonique": "exposition_totale_EUR",
+      "column_description": "Total exposition en euros",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "EXPOSITION - N",
+      "concept_canonique": "exposition_n",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "UTILISATION TRIMEST. - Volume (EUR)",
+      "concept_canonique": "utilisation_trimestrielle_volume",
+      "column_description": "Volume d'utilisation trimestriel en euros",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "UTILISATION TRIMEST. - Limite",
+      "concept_canonique": "utilisation_trimestrielle_limite",
+      "column_description": "Limite d'utilisation trimestrielle",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Janvier",
+      "concept_canonique": "kpi_operations_janvier",
+      "column_description": "Opérations comptabilisées de janvier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Février",
+      "concept_canonique": "kpi_operations_fevrier",
+      "column_description": "Opérations comptabilisées de février",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Mars",
+      "concept_canonique": "kpi_operations_mars",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Avril",
+      "concept_canonique": "kpi_operations_avril",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Mai",
+      "concept_canonique": "kpi_operations_mai",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Juin",
+      "concept_canonique": "kpi_operations_juin",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Juillet",
+      "concept_canonique": "kpi_operations_juillet",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Août",
+      "concept_canonique": "kpi_operations_aout",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Septembre",
+      "concept_canonique": "kpi_operations_septembre",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Octobre",
+      "concept_canonique": "kpi_operations_octobre",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Novembre",
+      "concept_canonique": "kpi_operations_novembre",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "MONITORING_ONBOARDING_CIB",
+      "source_name": "MONITORING_ONBOARDING_CIB",
+      "source_type": "agrégé",
+      "description": "Fichier pivot du LIV_034. Construit par Ali via un programme d'agrégation à partir d'un XLSX multi-feuilles maintenu manuellement par une autre personne. Le XLSX d'origine contient deux feuilles : MONITORING et ONBOARDING. Le fichier agrégé empile les deux et garde la trace de la feuille d'origine dans la colonne SOURCE. Liste les nouveaux clients CIB onboardés par BCEF, avec leurs caractéristiques carte, plafonds, expositions, et opérations comptabilisées mois par mois. Permet ensuite de calculer les revenus (LIV_034) et les commissions à reverser à CIB (LIV_035).",
+      "column_name": "OPERATIONS COMPTABILISEES (EN DEVISE) - Décembre",
+      "concept_canonique": "kpi_operations_decembre",
+      "column_description": "a_remplir",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034",
+        "BNP_LIV_035"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_COUNTRY",
+      "source_name": "OVERRIDE_COUNTRY",
+      "source_type": "referentiel_override",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "column_name": "Type identifiant",
+      "concept_canonique": "type_identifiant",
+      "column_description": "Type d'identifiant (RMPM, RC, RP...)",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_COUNTRY",
+      "source_name": "OVERRIDE_COUNTRY",
+      "source_type": "referentiel_override",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "column_name": "Valeur identifiant",
+      "concept_canonique": "identifiant_polymorphe",
+      "column_description": "Valeur de l'identifiant",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_COUNTRY",
+      "source_name": "OVERRIDE_COUNTRY",
+      "source_type": "referentiel_override",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "column_name": "Nom client",
+      "concept_canonique": "raison_sociale",
+      "column_description": "Nom du client (pour lisibilité)",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_COUNTRY",
+      "source_name": "OVERRIDE_COUNTRY",
+      "source_type": "referentiel_override",
+      "description": "Fichier de correction des pays clients. Permet d'écraser à la main le pays d'un client identifié par son RMPM (ou autre identifiant) si la valeur d'origine est incorrecte dans le MONITORING_ONBOARDING_CIB. Une ligne par correction.",
+      "column_name": "Pays override",
+      "concept_canonique": "override_country_value",
+      "column_description": "Valeur de pays à appliquer en écrasement",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_NB_CARTES",
+      "source_name": "BEJO_NB_CARTES",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override spécifique au client BEJO. Permet d'écraser le nombre de cartes par entité juridique du groupe BEJO. Cas particulier maintenu à la main.",
+      "column_name": "Nombre de Subsidiary",
+      "concept_canonique": "raison_sociale",
+      "column_description": "MAL NOMMÉ — contient en réalité le nom de l'entité juridique. Conservé tel quel.",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_NB_CARTES",
+      "source_name": "BEJO_NB_CARTES",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override spécifique au client BEJO. Permet d'écraser le nombre de cartes par entité juridique du groupe BEJO. Cas particulier maintenu à la main.",
+      "column_name": "RMPM",
+      "concept_canonique": "identifiant_RMPM",
+      "column_description": "RMPM de l'entité",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_NB_CARTES",
+      "source_name": "BEJO_NB_CARTES",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override spécifique au client BEJO. Permet d'écraser le nombre de cartes par entité juridique du groupe BEJO. Cas particulier maintenu à la main.",
+      "column_name": "Nombre de Carte",
+      "concept_canonique": "kpi_nb_cartes_override",
+      "column_description": "Nombre de cartes à écraser",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "Nom Entité juridique",
+      "concept_canonique": "raison_sociale",
+      "column_description": "Nom entité juridique",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "RMPM",
+      "concept_canonique": "identifiant_RMPM",
+      "column_description": "RMPM",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "Code",
+      "concept_canonique": "code_worldline",
+      "column_description": "Code probablement Worldline — à confirmer",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "Company",
+      "concept_canonique": "company_name",
+      "column_description": "Nom de société côté Worldline",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "ID_RP",
+      "concept_canonique": "identifiant_RP",
+      "column_description": "Identifiant RP",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "BEJO_DETAIL",
+      "source_name": "BEJO_DETAIL",
+      "source_type": "referentiel_override",
+      "description": "Fichier de détail des entités juridiques du groupe BEJO avec RMPM, Code Worldline, Company, ID_RP et IBAN. Utilisé pour enrichir les données du MONITORING_ONBOARDING_CIB sur ce client spécifique.",
+      "column_name": "IBAN",
+      "concept_canonique": "IBAN",
+      "column_description": "IBAN (valeurs tronquées dans l'extraction)",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "TYPE_ACTIONNAIRE",
+      "source_name": "TYPE_ACTIONNAIRE",
+      "source_type": "referentiel_override",
+      "description": "Fichier dont la sémantique est partiellement claire. Contient un type d'actionnaire, un marché et un RCM (Relation Commerciale ?). À clarifier par Ali ou via lecture du code du LIV_034.",
+      "column_name": "Type Actionnaire",
+      "concept_canonique": "type_actionnaire",
+      "column_description": "Type d'actionnaire — sémantique à clarifier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "TYPE_ACTIONNAIRE",
+      "source_name": "TYPE_ACTIONNAIRE",
+      "source_type": "referentiel_override",
+      "description": "Fichier dont la sémantique est partiellement claire. Contient un type d'actionnaire, un marché et un RCM (Relation Commerciale ?). À clarifier par Ali ou via lecture du code du LIV_034.",
+      "column_name": "Market",
+      "concept_canonique": "marche",
+      "column_description": "Marché — valeurs non lues dans l'extraction",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "TYPE_ACTIONNAIRE",
+      "source_name": "TYPE_ACTIONNAIRE",
+      "source_type": "referentiel_override",
+      "description": "Fichier dont la sémantique est partiellement claire. Contient un type d'actionnaire, un marché et un RCM (Relation Commerciale ?). À clarifier par Ali ou via lecture du code du LIV_034.",
+      "column_name": "RCM",
+      "concept_canonique": "RCM",
+      "column_description": "RCM = probablement Relation Commerciale / Raison sociale commerciale",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_PAYEE_PAYER",
+      "source_name": "OVERRIDE_PAYEE_PAYER",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override probablement utilisé pour corriger des associations Payee/Payer (donneur d'ordre / bénéficiaire) ou des mappings pays. Sémantique non claire dans les extractions fournies.",
+      "column_name": "[non nommé]",
+      "concept_canonique": "raison_sociale_override",
+      "column_description": "Probablement nom client",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_PAYEE_PAYER",
+      "source_name": "OVERRIDE_PAYEE_PAYER",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override probablement utilisé pour corriger des associations Payee/Payer (donneur d'ordre / bénéficiaire) ou des mappings pays. Sémantique non claire dans les extractions fournies.",
+      "column_name": "Payee/Payer Marking",
+      "concept_canonique": "pays_marking_code",
+      "column_description": "Code pays courte forme",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_PAYEE_PAYER",
+      "source_name": "OVERRIDE_PAYEE_PAYER",
+      "source_type": "referentiel_override",
+      "description": "Fichier d'override probablement utilisé pour corriger des associations Payee/Payer (donneur d'ordre / bénéficiaire) ou des mappings pays. Sémantique non claire dans les extractions fournies.",
+      "column_name": "PaynDC",
+      "concept_canonique": "pays_libelle_override",
+      "column_description": "Pays libellé long override",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "DEBIT_REVENUE_MAPPING",
+      "source_name": "DEBIT_REVENUE_MAPPING",
+      "source_type": "referentiel_override",
+      "description": "Petit tableau de mapping Débit/Revenue. Sémantique non claire dans l'extraction fournie (les exemples mélangent 'Dépense', 'Revenue', 'Prod', 'Procurement'). À clarifier.",
+      "column_name": "Débit alias",
+      "concept_canonique": "debit_alias",
+      "column_description": "À clarifier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "DEBIT_REVENUE_MAPPING",
+      "source_name": "DEBIT_REVENUE_MAPPING",
+      "source_type": "referentiel_override",
+      "description": "Petit tableau de mapping Débit/Revenue. Sémantique non claire dans l'extraction fournie (les exemples mélangent 'Dépense', 'Revenue', 'Prod', 'Procurement'). À clarifier.",
+      "column_name": "Montant",
+      "concept_canonique": "montant_label",
+      "column_description": "À clarifier — valeurs non numériques",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "DEBIT_REVENUE_MAPPING",
+      "source_name": "DEBIT_REVENUE_MAPPING",
+      "source_type": "referentiel_override",
+      "description": "Petit tableau de mapping Débit/Revenue. Sémantique non claire dans l'extraction fournie (les exemples mélangent 'Dépense', 'Revenue', 'Prod', 'Procurement'). À clarifier.",
+      "column_name": "[non nommé]",
+      "concept_canonique": "categorie_combinee",
+      "column_description": "Colonne sans nom dans l'extraction",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "COMMISSIONED_PROCESSING",
+      "source_name": "COMMISSIONED_PROCESSING",
+      "source_type": "referentiel_override",
+      "description": "Fichier avec 2 colonnes 'Commissioned processing' et 'Commissioned With' contenant des noms (probablement personnes ou entités). Sémantique non claire — peut-être lié à la gestion des commissions versées à CIB (cf. LIV_035).",
+      "column_name": "Commissioned processing",
+      "concept_canonique": "commissioned_processing",
+      "column_description": "À clarifier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "COMMISSIONED_PROCESSING",
+      "source_name": "COMMISSIONED_PROCESSING",
+      "source_type": "referentiel_override",
+      "description": "Fichier avec 2 colonnes 'Commissioned processing' et 'Commissioned With' contenant des noms (probablement personnes ou entités). Sémantique non claire — peut-être lié à la gestion des commissions versées à CIB (cf. LIV_035).",
+      "column_name": "Commissioned With",
+      "concept_canonique": "commissioned_with",
+      "column_description": "À clarifier",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_PRODUITS",
+      "source_name": "OVERRIDE_PRODUITS",
+      "source_type": "referentiel_override",
+      "description": "Fichier de normalisation simple à 2 colonnes (Original, Nouvelle). Sert à nettoyer les noms de produits, pays et commerciaux qui arrivent mal orthographiés ou incohérents dans le fichier MONITORING_ONBOARDING_CIB (maintenu manuellement par une autre personne). Une ligne par correspondance valeur erronée → valeur corrigée.",
+      "column_name": "Original",
+      "concept_canonique": "valeur_originale_erronnee",
+      "column_description": "Valeur telle qu'elle apparaît dans MONITORING (souvent mal orthographiée)",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    },
+    {
+      "source_ref": "OVERRIDE_PRODUITS",
+      "source_name": "OVERRIDE_PRODUITS",
+      "source_type": "referentiel_override",
+      "description": "Fichier de normalisation simple à 2 colonnes (Original, Nouvelle). Sert à nettoyer les noms de produits, pays et commerciaux qui arrivent mal orthographiés ou incohérents dans le fichier MONITORING_ONBOARDING_CIB (maintenu manuellement par une autre personne). Une ligne par correspondance valeur erronée → valeur corrigée.",
+      "column_name": "Nouvelle",
+      "concept_canonique": "valeur_corrigee",
+      "column_description": "Valeur normalisée à appliquer en écrasement",
+      "column_format": "a_remplir",
+      "livrables": [
+        "BNP_LIV_034"
+      ]
+    }
+  ],
+  "concepts_canoniques": {
+    "description": "Référentiel des concepts canoniques. Section synthétique — voir v1.3 pour le détail exhaustif.",
+    "identifiants": "identifiant_RP, identifiant_RC, identifiant_RMPM, identifiant_FDC, identifiant_IBP, identifiant_IBPC, business_group_id, type_identifiant, identifiant_polymorphe",
+    "acteurs": "raison_sociale, nom_GA, code_GA, ga_concat_code_nom (concaténation code GA + nom GA), siren, tva_intracommunautaire, code_CAF, nom_CAF, code_siege_DR, nom_siege_DR, nature_juridique_code, nature_juridique_libelle, nature_relation_client, responsable_commercial, commercial_sales, proprietaire_compte_parent_GA, compte_parent_nom, type_enregistrement_compte, nom_mandataire, nom_RP_principal, mail_RP_principal, nb_RP_secondaires, statut_client, entite_juridique_cliente, type_actionnaire, RCM",
+    "comptes": "IBAN, RIB, numero_compte_format_RIB, shadow_account_nbr, code_BIC, account_number",
+    "geographie_structures_BNP": "pays_code, pays_libelle, pays_libelle_court, region, branch_code, code_agence, agence_numero, agence_nom, pays_apporteur_affaire, pays_kick_back, adresse_ligne_1/2/3/4, code_postal_ville, toutes les structures BNP (AG, ENT, GRP, REG, RES, HUB, TYPO)",
+    "classification": "marche, segment_interne, gestion_indirecte, produit_type, produit_nom_origine, produit_usage_normalise, source_marche, client_non_europeen, langue_programme, onboarding_for_cards, source_feuille (MONITORING vs ONBOARDING)",
+    "wl_specifique": "wl_groupe, wl_sous_groupe, programme_id, programme_nom, libelle_programme, numero_marche, id_ligne_transfert, embossage, type_programme, periode_mois, niveau_agregation, code_worldline",
+    "monetaire": "devise, taux_change_vers_euros, plafond, plafond_mensuel_carte, plafond_produit, delai_differe_paiement, delai_differe_retrait, paiement_differe_indicateur, nb_jours_differe, marge_differe_pct, taux_differe, kick_back_indicateur, kick_back_taux, montant_intellilink, exposition_totale_EUR, utilisation_trimestrielle_volume, utilisation_trimestrielle_limite",
+    "kpi_operations": "kpi_operations_janvier à kpi_operations_decembre (12 colonnes mensuelles d'opérations comptabilisées)",
+    "temporel": "mois_AAAAMM, mois_MM_AAAA, mois_libelle_dynamique, date_taux, date_initiale_contrat, date_note_contentieux, date_creation_programme, date_demande, date_implementation",
+    "types_cartes": "type_carte (Corporate, Procurement, Voyage, Virtuelle...)",
+    "override_specifique": "override_country_value, override_payee_payer, debit_alias, commissioned_processing, commissioned_with"
+  },
+  "livrables_referentiel": {
+    "BNP_LIV_003": "Agrégation Worldline (PRGM_MENSUEL → PRGM_AGREGE)",
+    "BNP_LIV_004": "Agrégation MONEXT",
+    "BNP_LIV_018": "Analyse revenus cartes corporate MONEXT + CPC Worldline",
+    "BNP_LIV_019": "Variante/extension LIV_018",
+    "BNP_LIV_032": "Utilise PRGM_AGREGE, FICHIER_ACHETEUR, PARC_CLIENT_AJUSTE, IBAN_GROUP, IBAN_SINGLETON, REFERENTIEL_CLIENTS_MULTICLE",
+    "BNP_LIV_034": "Analyse des revenus des clients CIB onboardés par BCEF. Source pivot : MONITORING_ONBOARDING_CIB. Utilise aussi de nombreux fichiers d'override pour corriger les données du fichier monitoring (qui est maintenu manuellement, donc plein de fautes)."
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-06-23",
+  "_note": "Fonctions communes identifiées dans les scripts. Version canonique dans lib/fonctions.py (RÉFÉRENCE — inlinée dans chaque script refactoré, jamais importée).",
+  "functions": {
+    "load_csv_smart": {
+      "description": "Lit un CSV en testant plusieurs séparateurs (; , tab) et encodages (utf-8, latin1, cp1252, iso-8859-1). Tout en str, zéros initiaux préservés.",
+      "signature": "load_csv_smart(path: str, nrows: int | None = None) -> pd.DataFrame",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df = load_csv_smart('sources/work/MONEXT_consolide.csv')",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE", "BNP_LIV_017", "BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_024", "BNP_LIV_026", "BNP_LIV_029", "BNP_LIV_030", "BNP_LIV_033", "BNP_LIV_034", "BNP_LIV_035", "BNP_LIV_036"]
+    },
+    "load_xlsx": {
+      "description": "Charge un XLSX en str (préserve les zéros initiaux).",
+      "signature": "load_xlsx(path: str, sheet_name: int | str = 0) -> pd.DataFrame",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df = load_xlsx('originals/PRGM/202501.xlsx')",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE", "BNP_LIV_004", "BNP_LIV_026"]
+    },
+    "load_file_auto": {
+      "description": "Charge un CSV ou XLSX selon l'extension.",
+      "signature": "load_file_auto(path: str, nrows: int | None = None) -> pd.DataFrame",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df = load_file_auto(chemin)",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE", "BNP_LIV_029"]
+    },
+    "protect_long_ids": {
+      "description": "Protège les identifiants numériques longs au format =\"VALEUR\" pour préserver les zéros dans Excel.",
+      "signature": "protect_long_ids(series: pd.Series, threshold: int = 15) -> pd.Series",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['IBAN'] = protect_long_ids(df['IBAN'])",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE", "BNP_LIV_004"]
+    },
+    "save_csv_protected": {
+      "description": "Écrit un CSV utf-8-sig séparateur ; avec QUOTE_ALL et protection auto des IDs longs.",
+      "signature": "save_csv_protected(df: pd.DataFrame, path: str, protect_ids: bool = True, id_threshold: int = 15) -> None",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "save_csv_protected(df_out, 'sources/work/PRGM_consolide.csv')",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE", "BNP_LIV_004"]
+    },
+    "get_column_preview": {
+      "description": "Renvoie un aperçu (string) des n premières valeurs d'une colonne.",
+      "signature": "get_column_preview(df: pd.DataFrame, col: str, n: int = 3) -> str",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "apercu = get_column_preview(df, 'RS')",
+      "utilisee_dans": ["BNP_LIV_000_CONSOLE"]
+    },
+    "clean_id": {
+      "description": "Normalise un identifiant numérique (retire espaces, .0, et zéros initiaux selon variante).",
+      "signature": "clean_id(series: pd.Series) -> pd.Series",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['_RC'] = clean_id(df['ID_RC'])",
+      "utilisee_dans": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_026", "BNP_LIV_029", "BNP_LIV_030", "BNP_LIV_033", "BNP_LIV_036"]
+    },
+    "norm_rs": {
+      "description": "Normalise une Raison Sociale (majuscules, sans accents/ponctuation, espaces compactés) pour le matching.",
+      "signature": "norm_rs(series: pd.Series) -> pd.Series",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['_RS'] = norm_rs(df['RS'])",
+      "utilisee_dans": ["BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_026", "BNP_LIV_029", "BNP_LIV_033", "BNP_LIV_036"]
+    },
+    "to_float": {
+      "description": "Conversion numérique robuste (gère vides, virgule décimale, valeurs invalides -> 0.0).",
+      "signature": "to_float(series: pd.Series) -> pd.Series",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['_FLUX'] = to_float(df['DEPENSES']) + to_float(df['RETRAITS'])",
+      "utilisee_dans": ["BNP_LIV_004", "BNP_LIV_018", "BNP_LIV_019", "BNP_LIV_026", "BNP_LIV_029", "BNP_LIV_036"]
+    },
+    "parse_mois": {
+      "description": "Parse un mois YYYYMM en label lisible (et composantes année/mois).",
+      "signature": "parse_mois(value: str) -> str",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['_MOIS'] = df['MOIS'].apply(parse_mois)",
+      "utilisee_dans": ["BNP_LIV_019", "BNP_LIV_029", "BNP_LIV_036"]
+    },
+    "pays_to_geo": {
+      "description": "Mappe un pays vers une région géo (France / Hors_France / Pays_non_trouve).",
+      "signature": "pays_to_geo(pays: str) -> str",
+      "fichier_reference": "lib/fonctions.py",
+      "exemple": "df['GEO_GA'] = df['PAYS_GA'].apply(pays_to_geo)",
+      "utilisee_dans": ["BNP_LIV_018", "BNP_LIV_019"]
+    }
+  }
+}

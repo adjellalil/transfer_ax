@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Management Console</title>
+<style>
+  :root {
+    --bg:#FFFFFF; --panel:#F9FAFB; --border:#E5E7EB; --border-h:#D1D5DB;
+    --text:#1F2937; --text2:#6B7280; --muted:#9CA3AF;
+    --green:#009A44; --green-d:#006837; --green-l:#E6F4EC;
+    --err:#DC2626; --warn:#F59E0B;
+    --r:6px; --rl:8px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"Cascadia Code","Consolas",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+  h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+  a{color:var(--green);text-decoration:none;cursor:pointer}
+  a:hover{color:var(--green-d)}
+
+  /* Header */
+  header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);flex:none}
+  .logo{width:22px;height:22px;border-radius:5px;background:var(--green);display:inline-block}
+  header h1{font-size:16px}
+  header .sub{color:var(--text2);font-size:12px}
+
+  .app{flex:1;display:flex;min-height:0}
+
+  /* Sidebar nav */
+  .nav{width:208px;flex:none;border-right:1px solid var(--border);padding:12px 10px;display:flex;flex-direction:column;gap:2px;background:var(--panel)}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-weight:500;font-size:13px}
+  .nav-item:hover{background:#fff;color:var(--text)}
+  .nav-item.active{background:var(--green-l);color:var(--green-d)}
+  .nav-item .ic{width:8px;height:8px;border-radius:2px;background:currentColor;opacity:.6}
+
+  .work{flex:1;display:flex;flex-direction:column;min-width:0}
+  .main{flex:1;overflow:auto;padding:20px 24px;min-height:0}
+
+  /* Components */
+  .btn{font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--r);padding:7px 14px;border:1px solid var(--border);background:#fff;color:var(--text);transition:all .15s}
+  .btn:hover{border-color:var(--border-h);background:var(--panel)}
+  .btn-primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn-primary:hover{background:var(--green-d);border-color:var(--green-d)}
+  .btn-ghost{background:transparent;border-color:transparent}
+  .btn-ghost:hover{background:var(--panel)}
+  .btn-danger{color:var(--err);border-color:var(--border)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-sm{padding:4px 10px;font-size:12px}
+
+  input[type=text],select,textarea{width:100%;font-family:var(--font);font-size:13px;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:7px 10px}
+  input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-l)}
+  label.lbl{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .card+.card{margin-top:14px}
+  .grid{display:grid;gap:12px}
+
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--panel);color:var(--text2);border:1px solid var(--border)}
+  .badge-green{background:var(--green-l);color:var(--green-d);border-color:transparent}
+  .badge-warn{background:#FEF3C7;color:#92400E;border-color:transparent}
+
+  .section-h{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px;font-weight:600}
+  .page-h{font-size:18px;margin-bottom:4px}
+  .page-sub{color:var(--text2);font-size:13px;margin-bottom:16px}
+
+  /* Tables */
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+  thead th{position:sticky;top:0;background:var(--panel);cursor:pointer;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border-h)}
+  thead th:hover{color:var(--green-d)}
+  tbody tr:hover{background:var(--green-l)}
+  .tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--rl);max-height:48vh}
+
+  /* Two-column livrables */
+  .split{display:flex;gap:0;height:100%}
+  .list-col{width:248px;flex:none;border-right:1px solid var(--border);overflow:auto;padding-right:14px;margin-right:18px}
+  .detail-col{flex:1;overflow:auto;min-width:0}
+  .li{padding:9px 11px;border-radius:var(--r);cursor:pointer;border:1px solid transparent}
+  .li:hover{background:var(--panel)}
+  .li.active{background:var(--green-l);border-color:var(--green)}
+  .li .t{font-weight:600;font-size:13px}
+  .li .m{color:var(--text2);font-size:12px;margin-top:1px}
+
+  /* README render */
+  .rd{line-height:1.6}
+  .rd h1,.rd h2,.rd h3{margin:12px 0 6px}
+  .rd h1{font-size:16px}.rd h2{font-size:15px}.rd h3{font-size:13px;color:var(--text2)}
+  .rd p{margin:6px 0;color:#374151}
+  .rd ul{margin:6px 0;padding-left:20px;color:#374151}
+  .rd code{background:var(--panel);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px}
+  .rd pre{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:10px;overflow:auto;font-size:12px}
+
+  /* Tree */
+  .tree,.tree ul{list-style:none;margin:0;padding:0}
+  .tree ul{padding-left:18px;border-left:1px solid var(--border);margin-left:6px}
+  .tree li{padding:3px 0;font-size:13px}
+  .tree .node::before{content:"▸";color:var(--green);margin-right:7px;font-size:11px}
+
+  .exec-log{max-height:320px;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;line-height:1.5}
+  .exec-log div{margin-bottom:6px}
+  .exec-log .meta{color:var(--green)}
+  .exec-log .err{color:var(--err)}
+  .exec-log .out{color:var(--text2)}
+  .exec-log .idle{color:var(--muted)}
+
+  /* Modal */
+  .ov{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;z-index:50}
+  .ov.open{display:flex}
+  .modal{width:640px;max-width:92vw;max-height:80vh;background:#fff;border-radius:var(--rl);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .modal-h{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .pathbar{padding:7px 16px;color:var(--text2);font-size:12px;border-bottom:1px solid var(--border);font-family:var(--mono);word-break:break-all}
+  .modal-list{overflow:auto;padding:6px}
+  .bi{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:var(--r);cursor:pointer;font-size:13px}
+  .bi:hover{background:var(--panel)}
+  .bi .ic{color:var(--green)}.bi .ic.f{color:var(--muted)}
+
+  .muted{color:var(--muted)}
+  .chip{display:inline-block;font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:2px 6px;margin:2px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .bars rect{transition:width .2s}
+</style>
+</head>
+<body>
+  <header>
+    <span class="logo"></span>
+    <h1>Cash Management Console</h1>
+    <span class="sub">Mission BNP — Direction Monétique</span>
+  </header>
+
+  <div class="app">
+    <nav class="nav" id="nav"></nav>
+    <section class="work"><div class="main" id="main"></div></section>
+  </div>
+
+  <div class="ov" id="modal">
+    <div class="modal">
+      <div class="modal-h"><h3>Parcourir</h3><button class="btn btn-ghost btn-sm" id="modal-close">Fermer</button></div>
+      <div class="pathbar" id="modal-path"></div>
+      <div class="modal-list" id="modal-list"></div>
+    </div>
+  </div>
+
+<script>
+"use strict";
+const S = { tab:"execution", livrables:[], catalog:null, aggregators:[], config:null,
+  curLiv:null, curScript:null, curScriptContent:null, meta:null, exp:{path:"",data:null,filters:[]},
+  execLog:[], catSearch:"", pickTarget:null };
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const TABS = [["sources","Sources"],["donnees","Données"],["execution","Exécution"],["exploration","Exploration"],["configuration","Configuration"]];
+
+// ---------- Mini markdown ----------
+function md(src){
+  if(!src) return '<p class="muted">(Pas de README)</p>';
+  const L=esc(src).split(/\r?\n/); let h="",inL=false,inC=false;
+  const cl=()=>{if(inL){h+="</ul>";inL=false;}};
+  for(let r of L){
+    if(r.trim().startsWith("```")){ if(inC){h+="</pre>";inC=false;} else {cl();h+="<pre>";inC=true;} continue; }
+    if(inC){h+=r+"\n";continue;}
+    let ln=r.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");
+    const hm=ln.match(/^(#{1,4})\s+(.*)$/);
+    if(hm){cl();const n=hm[1].length;h+=`<h${n}>${hm[2]}</h${n}>`;continue;}
+    const li=ln.match(/^\s*[-*]\s+(.*)$/);
+    if(li){if(!inL){h+="<ul>";inL=true;}h+=`<li>${li[1]}</li>`;continue;}
+    if(ln.trim()===""){cl();continue;}
+    cl();h+=`<p>${ln}</p>`;
+  }
+  cl();if(inC)h+="</pre>";return h;
+}
+
+// ---------- Nav ----------
+function renderNav(){
+  $("nav").innerHTML="";
+  for(const [k,label] of TABS){
+    const el=document.createElement("div");
+    el.className="nav-item"+(S.tab===k?" active":"");
+    el.innerHTML=`<span class="ic"></span>${label}`;
+    el.onclick=()=>{S.tab=k;renderNav();renderMain();};
+    $("nav").appendChild(el);
+  }
+}
+
+// ---------- Main router ----------
+function renderMain(){
+  const m=$("main");
+  if(S.tab==="execution") return renderExecution(m);
+  if(S.tab==="sources") return renderSources(m);
+  if(S.tab==="donnees") return renderDonnees(m);
+  if(S.tab==="exploration") return renderExplorer(m);
+  if(S.tab==="configuration") return renderConfig(m);
+}
+
+// ========== LIVRABLES ==========
+function renderLivrables(m){
+  m.innerHTML='<div class="split"><div class="list-col" id="liv-list"></div><div class="detail-col" id="liv-detail"></div></div>';
+  const lc=$("liv-list");
+  S.livrables.forEach(l=>{
+    const el=document.createElement("div");
+    el.className="li"+(S.curLiv&&S.curLiv.ref===l.ref?" active":"");
+    el.innerHTML=`<div class="t">${esc(l.ref)}</div><div class="m">${l.scripts.length} script(s)</div>`;
+    el.onclick=()=>{S.curLiv=l;S.curScript=null;S.meta=null;renderLivrables(m);};
+    lc.appendChild(el);
+  });
+  const d=$("liv-detail");
+  if(!S.curLiv){ d.innerHTML='<div class="page-h">Livrables</div><div class="page-sub">Selectionnez un livrable pour voir sa documentation et ses scripts.</div>'; return; }
+  if(!S.curScript){
+    d.innerHTML=`<div class="page-h">${esc(S.curLiv.ref)}</div><div class="card rd">${md(S.curLiv.readme)}</div><div class="section-h">Scripts</div><div id="scs"></div>`;
+    const sc=$("scs");
+    if(!S.curLiv.scripts.length){ sc.innerHTML='<p class="muted">Aucun script executable.</p>'; return; }
+    S.curLiv.scripts.forEach(s=>{
+      const el=document.createElement("div");el.className="card";el.style.cssText="cursor:pointer;display:flex;justify-content:space-between;align-items:center";
+      el.innerHTML=`<span style="font-weight:600">${esc(s)}</span><span style="color:var(--green)">Configurer &rarr;</span>`;
+      el.onclick=()=>openScript(s);sc.appendChild(el);
+    });
+    return;
+  }
+  renderScript(d);
+}
+
+async function openScript(s){
+  S.curScript=s;S.meta=null;renderMain();
+  try{
+    const r=await fetch(`/api/script/tree?livrable=${encodeURIComponent(S.curLiv.ref)}&script=${encodeURIComponent(s)}`);
+    S.meta=await r.json();
+  }catch(e){S.meta={error:e.message};}
+  renderMain();
+}
+
+function renderScript(d){
+  const meta=S.meta||{};
+  let treeHtml;
+  if(meta.tree&&meta.tree.length) treeHtml=`<ul class="tree">${renderTree(meta.tree)}</ul>`;
+  else if(meta.decompositionText) treeHtml=`<pre class="rd" style="margin:0;font-size:12px;white-space:pre-wrap">${esc(meta.decompositionText)}</pre>`;
+  else treeHtml='<p class="muted" style="font-size:13px">Pas de section DECOMPOSITION.</p>';
+  let argsHtml="";
+  const args=meta.arguments||[];
+  if(args.length){
+    argsHtml=args.map((a,i)=>{
+      const isPath=(a.metavar||"").toUpperCase().includes("PATH");
+      const browse=isPath?`<button class="btn btn-sm" onclick="pickInto('arg${i}')">Parcourir</button>`:"";
+      const verify=isPath?`<button class="btn btn-sm" onclick="verifyCols('arg${i}')">Verifier colonnes</button>`:"";
+      return `<div style="margin-bottom:12px"><label class="lbl">${esc(a.flag)} ${a.required?'<span style="color:var(--err)">*</span>':'<span class="muted">(optionnel)</span>'} — ${esc(a.description)}</label>
+        <div class="row"><input type="text" id="arg${i}" data-flag="${esc(a.flag.replace(/^--/,''))}" placeholder="${esc(a.metavar||'')}">${browse}${verify}</div>
+        <div id="cols${i}" class="muted" style="font-size:11px;margin-top:4px"></div></div>`;
+    }).join("");
+  } else {
+    argsHtml=`<label class="lbl">Arguments CLI (texte libre — le script n'expose pas encore de section ARGUMENTS CLI)</label><textarea id="rawargs" rows="2" placeholder="--source ... --output ..."></textarea>`;
+  }
+  d.innerHTML=`<div class="row" style="justify-content:space-between"><div><div class="page-h">${esc(meta.title||S.curScript)} ${meta.code?`<span class="badge badge-green">${esc(meta.code)}</span>`:""}</div><div class="muted" style="font-size:12px">${esc(S.curLiv.ref)} / ${esc(S.curScript)}</div></div><button class="btn btn-ghost btn-sm" onclick="backLiv()">&larr; Retour</button></div>
+    ${meta.description?`<div class="card" style="margin-top:14px"><p style="margin:0">${esc(meta.description)}</p></div>`:""}
+    ${meta.sources&&meta.sources.length?`<div class="card" style="margin-top:14px"><div class="section-h">Sources requises</div><div class="row" style="flex-wrap:wrap;gap:6px">${meta.sources.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div></div>`:""}
+    <div class="section-h">Decomposition</div><div class="card">${treeHtml}</div>
+    <div class="section-h">Parametres</div><div class="card">${argsHtml}
+      <div style="margin-top:14px"><label class="lbl">Nom du fichier de sortie (tokens {YYYY}{MM}{DD}{HH}{MI}{NAME})</label>
+      <input type="text" id="fname" value="{YYYY}{MM}{DD}_{HH}{MI}_${esc(meta.code||'output')}" oninput="previewName()"><div class="muted" id="fnamePrev" style="font-size:11px;margin-top:4px"></div></div>
+      <div class="row" style="margin-top:16px"><button class="btn btn-primary" onclick="runScript()">&rarr; Lancer</button></div>
+    </div>`;
+  previewName();
+}
+function renderTree(nodes){ return nodes.map(n=>`<li><span class="node">${esc(n.label)}</span>${n.children&&n.children.length?`<ul>${renderTree(n.children)}</ul>`:""}</li>`).join(""); }
+window.backLiv=()=>{S.curScript=null;S.meta=null;renderMain();};
+window.previewName=()=>{const f=$("fname");if(f)$("fnamePrev").textContent="Apercu : "+resolveTokensJS(f.value);};
+function resolveTokensJS(s){const d=new Date(),p=n=>String(n).padStart(2,"0");return String(s).replace(/\{YYYY\}/g,d.getFullYear()).replace(/\{MM\}/g,p(d.getMonth()+1)).replace(/\{DD\}/g,p(d.getDate())).replace(/\{HH\}/g,p(d.getHours())).replace(/\{MI\}/g,p(d.getMinutes())).replace(/\{NAME\}/g,"output");}
+
+window.pickInto=(id)=>openModal(null,(full)=>{$(id).value=full;});
+window.verifyCols=async(id)=>{
+  const path=$(id).value.trim();if(!path)return;
+  const out=$("cols"+id.replace("arg",""));out.textContent="Lecture...";
+  try{const r=await fetch(`/api/file/preview?path=${encodeURIComponent(path)}&limit=1`);const j=await r.json();
+    out.innerHTML=j.error?`<span style="color:var(--err)">${esc(j.error)}</span>`:`${j.total_rows} lignes — colonnes : `+j.columns.map(c=>`<span class="chip">${esc(c)}</span>`).join("");
+  }catch(e){out.textContent="Erreur";}
+};
+window.runScript=()=>{
+  const args={};
+  const raw=$("rawargs");
+  if(raw){ args.__raw=raw.value; }
+  document.querySelectorAll("[data-flag]").forEach(el=>{ if(el.value.trim()) args[el.dataset.flag]=el.value.trim(); });
+  const fn=$("fname"); if(fn&&fn.value.trim()) args["output-filename"]=fn.value.trim();
+  const payload=raw?{livrable:S.curLiv.ref,script:S.curScript,args:raw.value}:{livrable:S.curLiv.ref,script:S.curScript,args};
+  clearExecLog();
+  stream("/api/script/run",payload);
+};
+
+// ========== SOURCES ==========
+function resolveCatalogPath(rel){
+  if(!rel||!S.config) return rel||"";
+  const work = String(S.config.sources_work_path||"").replace(/\\/g,'/').replace(/\/+$/,'');
+  const orig = String(S.config.sources_originals_path||"").replace(/\\/g,'/').replace(/\/+$/,'');
+  if(rel.startsWith("sources/work/")) return work ? `${work}/${rel.slice(12)}` : rel;
+  if(rel.startsWith("sources/originals/")) return orig ? `${orig}/${rel.slice(17)}` : rel;
+  return rel;
+}
+function browseSource(path){ if(!path) return; openModal(path,()=>{}); }
+function renderSources(m){
+  const cat=S.catalog||{};const srcs=cat.sources||[];
+  const groups={agrege:[],referentiel:[],autre:[]};
+  srcs.forEach(s=>{(groups[s.type]||groups.autre).push(s);});
+  const workRoot = S.config ? S.config.sources_work_path||"" : "";
+  const origRoot = S.config ? S.config.sources_originals_path||"" : "";
+  let h=`<div class="page-h">Sources</div><div class="page-sub">${srcs.length} sources cataloguées.</div>
+    <div class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between;align-items:center">
+      <div><strong>Racine des sources travail</strong></div><div class="muted" style="font-family:var(--mono);font-size:12px">${esc(workRoot||'(non configuré)')}</div>
+    </div><div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <button class="btn btn-sm" onclick="browseSource(${JSON.stringify(workRoot)})">Parcourir sources travail</button>
+      <button class="btn btn-sm" onclick="browseSource(${JSON.stringify(origRoot)})">Parcourir sources originaux</button>
+    </div></div>`;
+  for(const [k,label] of [["agrege","Agrégés"],["referentiel","Référentiels"],["autre","Autres"]]){
+    if(!groups[k].length)continue;
+    h+=`<div class="section-h">${label}</div>`;
+    groups[k].forEach(s=>{
+      const resolved = resolveCatalogPath(s.chemin_travail||s.chemin_original||"");
+      h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><strong>${esc(s.nom_canonique||s.ref)}</strong> <span class="badge">${esc(s.type)}</span></div>
+        <div class="row">${resolved?`<button class="btn btn-sm" onclick="browseSource(${JSON.stringify(resolved)})">Parcourir</button>`:""}
+        ${s.agregateur?`<button class="btn btn-sm" onclick="setTabAgg('${esc(s.agregateur)}')">Agrégateur</button>`:""}</div></div>
+        <div style="color:var(--text2);font-size:13px;margin:6px 0">${esc(s.description)}</div>
+        <div class="muted" style="font-size:11px;font-family:var(--mono)">${esc(resolved)}</div>
+        ${(s.colonnes_principales||s.columns||[]).length?`<div style="margin-top:6px">${(s.colonnes_principales||s.columns||[]).map(c=>`<span class="chip">${esc(c)}</span>`).join("")}</div>`:""}</div>`;
+    });
+  }
+  m.innerHTML=h;
+}
+window.toExplorer=(path)=>{S.exp.path=resolveWork(path);S.tab="exploration";renderNav();renderMain();setTimeout(loadExplorer,0);};
+window.setTabAgg=(ref)=>{S.tab="execution";S.execMode="aggregators";S.execTarget=ref;renderNav();renderMain();};
+function resolveWork(rel){ return resolveCatalogPath(rel); }
+
+function renderExecution(m){
+  const mode=S.execMode||"livrables";
+  m.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px"><div>
+      <span class="page-h">Exécution</span><div class="page-sub">Gérez les scripts de livrables et lancez les agrégateurs.</div></div>
+      <div class="row"><button class="btn btn-sm ${mode==="livrables"?"btn-primary":""}" onclick="S.execMode='livrables';renderMain();">Livrables</button>
+      <button class="btn btn-sm ${mode==="aggregators"?"btn-primary":""}" onclick="S.execMode='aggregators';renderMain();">Agrégateurs</button></div></div>`;
+  const section=document.createElement("div");
+  if(mode==="aggregators"){
+    section.innerHTML="";
+    renderAgregateurs(section);
+  } else {
+    section.innerHTML="";
+    renderLivrables(section);
+  }
+  m.appendChild(section);
+  m.appendChild(renderExecLog());
+}
+
+function renderExecLog(){
+  const wrapper=document.createElement('div');
+  wrapper.className='card';
+  const count=S.execLog.length;
+  wrapper.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div><div class="page-h" style="margin:0;font-size:16px">Journal d'exécution</div>
+      <div class="muted" style="font-size:13px">Dernières sorties des scripts et agrégateurs.</div></div>
+      <button class="btn btn-sm" onclick="clearExecLog()">Effacer</button>
+    </div>
+    <div id="exec-log-body" class="exec-log">${count?S.execLog.map(e=>`<div class="${e.cls||''}">${esc(e.text)}</div>`).join(''):'<span class="idle">En attente d\'une execution...</span>'}</div>`;
+  return wrapper;
+}
+
+function renderDonnees(m){
+  const cat=S.catalog||{};
+  const cols=cat.columns||[];
+  const srcs=cat.sources||[];
+  const q=S.catSearch.toLowerCase();
+  const filt=cols.filter(c=>!q||c.name.toLowerCase().includes(q)||(c.definition||"").toLowerCase().includes(q));
+  const types={}; srcs.forEach(s=>{types[s.type]=(types[s.type]||0)+1;});
+  let h=`<div class="page-h">Données</div><div class="page-sub">Catalogue des sources et des colonnes pour l'analyse métier.</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="card"><div class="section-h">Sources</div><div>${srcs.length} sources cataloguées</div>${Object.entries(types).map(([k,v])=>`<div class="chip">${esc(k)}: ${v}</div>`).join('')}</div>
+      <div class="card"><div class="section-h">Colonnes</div><div>${cols.length} colonnes cataloguées</div><div class="muted" style="margin-top:8px">Utilisez la recherche pour afficher un détail précis.</div></div>
+    </div>
+    <input type="text" id="catq" placeholder="Rechercher une colonne..." value="${esc(S.catSearch)}" style="max-width:420px;margin-bottom:14px">
+    <div class="split"><div class="list-col" id="cat-list" style="width:300px"></div><div class="detail-col" id="cat-detail"><p class="muted">Selectionnez une colonne.</p></div></div>`;
+  m.innerHTML=h;
+  $("catq").oninput=(e)=>{S.catSearch=e.target.value;renderDonnees(m);};
+  const cl=$("cat-list");
+  filt.forEach(c=>{
+    const el=document.createElement("div");el.className="li";
+    el.innerHTML=`<div class="t">${esc(c.name)}</div><div class="m">${c.kind==="calculee"?'<span class="badge badge-green">calculee</span>':'<span class="badge">source</span>'}</div>`;
+    el.onclick=()=>{ $("cat-detail").innerHTML=catDetail(c); cl.querySelectorAll(".li").forEach(x=>x.classList.remove("active")); el.classList.add("active"); };
+    cl.appendChild(el);
+  });
+  if(!filt.length)cl.innerHTML='<p class="muted">Aucun resultat.</p>';
+}
+
+function renderConfig(m){
+  const cfg=S.config||{};
+  m.innerHTML=`<div class="page-h">Configuration</div><div class="page-sub">Modifiez la configuration de l'application et enregistrez-la localement.</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;max-width:880px">
+      ${renderConfigField('Port', 'port', cfg.port||3000)}
+      ${renderConfigField('Chemin livrables', 'livrables_path', cfg.livrables_path||'../local/livrables')}
+      ${renderConfigField('Chemin sources originales', 'sources_originals_path', cfg.sources_originals_path||'../local/sources/originals')}
+      ${renderConfigField('Chemin sources travail', 'sources_work_path', cfg.sources_work_path||'../local/sources/work')}
+      ${renderConfigField('Chemin catalogue', 'catalog_path', cfg.catalog_path||'./catalog.json')}
+      ${renderConfigField('Chemin Python', 'python_path', cfg.python_path||'python')}
+      ${renderConfigField('Chemin sortie par défaut', 'default_output_path', cfg.default_output_path||'../local/outputs')}
+      ${renderConfigField('Template nom fichier', 'default_filename_template', cfg.default_filename_template||'{YYYY}{MM}{DD}_{HH}{MI}_{NAME}')}
+    </div>
+    <div style="margin-top:18px"><button class="btn btn-primary" onclick="saveConfig()">Enregistrer</button> <span class="muted" id="config-status"></span></div>`;
+}
+function renderConfigField(label,id,value){
+  return `<div><label class="lbl" for="cfg-${id}">${esc(label)}</label><input type="text" id="cfg-${id}" value="${esc(value)}"></div>`;
+}
+
+window.saveConfig=async()=>{
+  const keys=['port','livrables_path','sources_originals_path','sources_work_path','catalog_path','python_path','default_output_path','default_filename_template'];
+  const payload={};
+  keys.forEach(k=>{ const el=$("cfg-"+k); if(el) payload[k]=el.value.trim(); });
+  const status=$("config-status"); status.textContent='Enregistrement...';
+  try{
+    const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(!r.ok){ status.textContent='Erreur : '+(j.error||r.status); return; }
+    S.config=j; status.textContent='Enregistré'; setTimeout(()=>{status.textContent='';},3000);
+  }catch(e){ status.textContent='Erreur réseau'; }
+}
+
+function catDetail(c){
+  let h=`<div class="page-h">${esc(c.name)}</div><div class="muted" style="margin-bottom:12px">${c.kind} — ${esc(c.format||"")}</div>
+    <div class="card"><p>${esc(c.definition)}</p>
+    ${c.exemple?`<div style="margin-top:8px"><span class="lbl">Exemple</span><span class="chip">${esc(c.exemple)}</span></div>`:""}`;
+  if(c.kind==="source"&&c.sources)h+=`<div style="margin-top:8px"><span class="lbl">Sources</span>${c.sources.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>`;
+  if(c.kind==="calculee"){
+    if(c.depends_on&&c.depends_on.length)h+=`<div style="margin-top:8px"><span class="lbl">Depend de</span>${c.depends_on.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>`;
+    if(c.produced_by&&c.produced_by.length)h+=`<div style="margin-top:8px"><span class="lbl">Produit par</span>${c.produced_by.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>`;
+    if(c.formula_description)h+=`<div style="margin-top:8px"><span class="lbl">Formule</span><span style="font-size:13px">${esc(c.formula_description)}</span></div>`;
+  }
+  return h+"</div>";
+}
+
+// ========== EXPLORER ==========
+function renderExplorer(m){
+  m.innerHTML=`<div class="page-h">Explorer</div><div class="page-sub">Ouvrez un CSV/XLSX pour previsualiser, filtrer et analyser une colonne.</div>
+    <div class="row" style="margin-bottom:14px"><input type="text" id="exp-path" placeholder="Chemin du fichier..." value="${esc(S.exp.path)}" style="max-width:520px">
+    <button class="btn" onclick="pickFile()">Parcourir</button><button class="btn btn-primary" onclick="loadExplorer()">Charger</button></div>
+    <div id="exp-body"></div>`;
+  if(S.exp.data)renderExpData();
+}
+window.pickFile=()=>openModal(null,(full)=>{S.exp.path=full;$("exp-path").value=full;});
+window.loadExplorer=async()=>{
+  const path=($("exp-path")?$("exp-path").value:S.exp.path).trim();if(!path)return;
+  S.exp.path=path;S.exp.filters=[];
+  const body=$("exp-body");body.innerHTML='<p class="muted">Chargement...</p>';
+  try{const r=await fetch(`/api/file/preview?path=${encodeURIComponent(path)}&limit=100`);S.exp.data=await r.json();}
+  catch(e){S.exp.data={error:e.message};}
+  renderExpData();
+};
+function renderExpData(){
+  const body=$("exp-body");const d=S.exp.data;
+  if(!d||d.error){body.innerHTML=`<div class="card" style="color:var(--err)">${esc(d?d.error:"Erreur")}</div>`;return;}
+  body.innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="muted">${d.total_rows} lignes — ${d.columns.length} colonnes ${S.exp.filters.length?`(${S.exp.filters.length} filtre(s))`:""}</div>
+    <div class="row"><button class="btn btn-sm" onclick="addFilter()">+ Filtre</button>${S.exp.filters.length?'<button class="btn btn-sm" onclick="clearFilters()">Vider filtres</button>':""}</div></div>
+    <div id="filters"></div>
+    <div class="split" style="height:auto"><div style="flex:1;min-width:0"><div class="tbl-wrap"><table id="exp-tbl"></table></div></div><div id="stats-col" style="width:300px;flex:none;margin-left:18px"></div></div>`;
+  renderFilters();renderTable();
+}
+function renderTable(){
+  const d=S.exp.data;const t=$("exp-tbl");
+  t.innerHTML=`<thead><tr>${d.columns.map(c=>`<th onclick="colStats('${esc(c).replace(/'/g,"")}')">${esc(c)} ${d.column_types&&d.column_types[c]==="number"?"#":""}</th>`).join("")}</tr></thead>
+    <tbody>${d.rows.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+}
+function renderFilters(){
+  const f=$("filters");if(!S.exp.filters.length){f.innerHTML="";return;}
+  f.innerHTML='<div class="card" style="margin-bottom:10px">'+S.exp.filters.map((flt,i)=>{
+    const cols=S.exp.data.columns;
+    return `<div class="row" style="margin-bottom:6px"><select onchange="updF(${i},'col',this.value)" style="width:auto">${cols.map(c=>`<option ${c===flt.col?"selected":""}>${esc(c)}</option>`).join("")}</select>
+      <select onchange="updF(${i},'op',this.value)" style="width:auto">${["=","!=","contains",">","<",">=","<="].map(o=>`<option ${o===flt.op?"selected":""}>${o}</option>`).join("")}</select>
+      <input type="text" value="${esc(flt.value)}" oninput="updF(${i},'value',this.value)" style="width:160px"><button class="btn btn-sm btn-danger" onclick="rmF(${i})">x</button></div>`;
+  }).join("")+'<button class="btn btn-sm btn-primary" onclick="applyFilters()">Appliquer</button></div>';
+}
+window.addFilter=()=>{S.exp.filters.push({col:S.exp.data.columns[0],op:"contains",value:""});renderFilters();};
+window.updF=(i,k,v)=>{S.exp.filters[i][k]=v;};
+window.rmF=(i)=>{S.exp.filters.splice(i,1);renderFilters();};
+window.clearFilters=()=>{S.exp.filters=[];loadExplorer();};
+window.applyFilters=async()=>{
+  try{const r=await fetch("/api/file/filter",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:S.exp.path,filters:S.exp.filters,limit:100})});
+    const j=await r.json();if(j.error){alert(j.error);return;}S.exp.data={...j,_filtered:true};renderExpData();}
+  catch(e){alert(e.message);}
+};
+window.colStats=async(col)=>{
+  const sc=$("stats-col");sc.innerHTML='<div class="card">Calcul...</div>';
+  try{const r=await fetch("/api/file/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:S.exp.path,column:col})});
+    const j=await r.json();sc.innerHTML=statsCard(col,j);}catch(e){sc.innerHTML=`<div class="card" style="color:var(--err)">${esc(e.message)}</div>`;}
+};
+function statsCard(col,s){
+  if(s.error)return `<div class="card" style="color:var(--err)">${esc(s.error)}</div>`;
+  let h=`<div class="card"><div class="section-h" style="margin-top:0">Colonne : ${esc(col)}</div>
+    <div class="muted" style="font-size:12px">type ${s.type} — ${s.count} valeurs — ${s.unique} uniques — ${s.nulls} vides</div>`;
+  if(s.type==="numeric"){
+    h+=`<div style="margin:8px 0;font-size:12px"><div>somme : <strong>${fmt(s.sum)}</strong></div><div>moyenne : <strong>${fmt(s.mean)}</strong></div><div>min : ${fmt(s.min)} — max : ${fmt(s.max)}</div></div>`;
+    h+=histogramSVG(s.histogram||[]);
+  }else{
+    h+=barsSVG(s.top_values||[]);
+  }
+  return h+"</div>";
+}
+function fmt(n){return (Math.round(n*100)/100).toLocaleString("fr-FR");}
+function histogramSVG(bins){
+  if(!bins.length)return"";const W=264,H=110,max=Math.max(...bins.map(b=>b.count),1),bw=W/bins.length;
+  let bars=bins.map((b,i)=>{const hh=Math.round(b.count/max*(H-20));return `<rect x="${i*bw+2}" y="${H-hh-14}" width="${bw-4}" height="${hh}" fill="#009A44" rx="2"></rect><text x="${i*bw+bw/2}" y="${H-2}" font-size="7" text-anchor="middle" fill="#9CA3AF">${esc(b.label)}</text>`;}).join("");
+  return `<svg class="bars" width="${W}" height="${H}" style="margin-top:6px">${bars}</svg>`;
+}
+function barsSVG(top){
+  if(!top.length)return'<p class="muted">Aucune valeur.</p>';const max=Math.max(...top.map(t=>t[1]),1);
+  return `<div style="margin-top:6px">`+top.map(([k,n])=>{const w=Math.round(n/max*180);
+    return `<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:11px"><span style="width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(k)}">${esc(k)}</span><svg width="184" height="13"><rect width="${w}" height="13" fill="#009A44" rx="2"></rect></svg><span class="muted">${n}</span></div>`;
+  }).join("")+`</div>`;
+}
+
+// ========== AGREGATEURS ==========
+function renderAgregateurs(m){
+  const aggs=S.aggregators||[];
+  let h=`<div class="page-h">Agregateurs</div><div class="page-sub">Consolidation des fichiers mensuels en CSV de travail.</div>`;
+  if(!aggs.length)h+='<p class="muted">Aucun agregateur catalogue.</p>';
+  aggs.forEach(a=>{
+    const actif=a.status==="actif";
+    h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><strong>${esc(a.ref)}</strong> <span class="badge ${actif?"badge-green":"badge-warn"}">${esc(a.status)}</span></div>
+      ${actif?`<button class="btn btn-primary btn-sm" onclick="runAgg('${esc(a.ref)}')">Lancer</button>`:'<span class="muted" style="font-size:12px">a creer</span>'}</div>
+      <div style="color:var(--text2);font-size:13px;margin:6px 0">${esc(a.description)}</div>
+      <div class="muted" style="font-size:11px;font-family:var(--mono)">${esc(a.input_folder||"")} &rarr; ${esc(a.output_file||"")}</div></div>`;
+  });
+  m.innerHTML=h;
+}
+window.runAgg=(ref)=>{ clearExecLog(); stream("/api/aggregator/run",{aggregator:ref}); };
+
+// ---------- Execution log streaming ----------
+function appendLog(text,cls){
+  S.execLog.push({ text, cls });
+  const body=$('exec-log-body');
+  if(body){
+    const idle=body.querySelector('.idle');
+    if(idle) body.innerHTML='';
+    const line=document.createElement('div');
+    if(cls) line.className=cls;
+    line.textContent=text;
+    body.appendChild(line);
+    body.scrollTop=body.scrollHeight;
+  }
+}
+function clearExecLog(){
+  S.execLog=[];
+  const body=$('exec-log-body');
+  if(body){ body.innerHTML='<span class="idle">En attente d\'une execution...</span>'; }
+}
+async function stream(url,payload){
+  appendLog(`\n──────── ${(payload.script||payload.aggregator||'')} ────────\n`, 'meta');
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok){const e=await res.json().catch(()=>({error:res.statusText}));appendLog(`Erreur : ${(e.error||res.status)}\n`, 'err');return;}
+    const rd=res.body.getReader();const dec=new TextDecoder();let buf='';
+    while(true){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let nl;
+      while((nl=buf.indexOf('\n'))>=0){const line=buf.slice(0,nl);buf=buf.slice(nl+1);if(!line.trim())continue;
+        let rec;try{rec=JSON.parse(line);}catch(_){continue;}
+        if(rec.t==='out')appendLog(rec.d,'out');else if(rec.t==='err')appendLog(rec.d,'err');
+        else if(rec.t==='meta')appendLog(rec.d+'\n','meta');
+        else if(rec.t==='end'){const ok=rec.code===0;appendLog(`\n▸ Termine — code ${rec.code}${ok?'':' (echec)'}\n`,ok?'meta':'err');}
+      }}
+  }catch(e){appendLog(`Erreur reseau : ${e.message}\n`, 'err');}
+}
+
+// ---------- Modal navigateur ----------
+async function openModal(target,onPick){
+  S.pickTarget=onPick;$("modal").classList.add("open");
+  const list=$("modal-list");list.innerHTML='<div class="bi">Chargement...</div>';
+  let data;try{const q=target?("?path="+encodeURIComponent(target)):"";const r=await fetch("/api/browse"+q);data=await r.json();if(!r.ok)throw new Error(data.error);}catch(e){list.innerHTML=`<div class="bi" style="color:var(--err)">${esc(e.message)}</div>`;return;}
+  $("modal-path").textContent=data.path;list.innerHTML="";
+  if(data.parent){const up=document.createElement("div");up.className="bi";up.innerHTML='<span class="ic">▲</span><span>.. (parent)</span>';up.onclick=()=>openModal(data.parent,onPick);list.appendChild(up);}
+  data.entries.forEach(en=>{const el=document.createElement("div");el.className="bi";
+    el.innerHTML=(en.type==="dir"?'<span class="ic">▸</span>':'<span class="ic f">◇</span>')+`<span>${esc(en.name)}</span>`;
+    el.onclick=()=>{if(en.type==="dir")openModal(en.full,onPick);else{S.pickTarget&&S.pickTarget(en.full);closeModal();}};list.appendChild(el);});
+}
+function closeModal(){$("modal").classList.remove("open");}
+$("modal-close").onclick=closeModal;
+$("modal").onclick=(e)=>{if(e.target===$("modal"))closeModal();};
+
+// ---------- Init ----------
+async function init(){
+  renderNav();
+  try{
+    const [lv,ct,ag,cfg] = await Promise.all([
+      fetch("/api/livrables").then(r=>r.json()),
+      fetch("/api/catalog").then(r=>r.json()),
+      fetch("/api/aggregators").then(r=>r.json()),
+      fetch("/api/config").then(r=>r.json())
+    ]);
+    S.livrables=lv;S.catalog=ct;S.aggregators=ag;S.config=cfg;
+  }catch(e){console.error(e);}
+  renderMain();
+}
+init();
+</script>
+</body>
+</html>
